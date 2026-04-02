@@ -108,7 +108,7 @@ line-length = 88
 target-version = ['py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
-/(
+^/(
     \.git
   | \.venv
   | venv
@@ -124,8 +124,6 @@ extend-exclude = '''
   | \.tox
   | \.nox
   | docs/_build
-  | dist
-  | build
   | openfoam_ai/_version\.py
 )/
 '''
