@@ -109,14 +109,24 @@ target-version = ['py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
-  \.git
+    \.git
   | \.venv
   | venv
   | build
   | dist
   | __pycache__
   | \.eggs
-  | *.egg-info
+  | \.pytest_cache
+  | \.mypy_cache
+  | \.ruff_cache
+  | \.coverage
+  | htmlcov
+  | \.tox
+  | \.nox
+  | docs/_build
+  | dist
+  | build
+  | openfoam_ai/_version\.py
 )/
 '''
 
