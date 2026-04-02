@@ -1,0 +1,51 @@
+# EditorConfig - 跨编辑器的代码风格配置
+# 官方网站：https://editorconfig.org
+
+root = true
+
+# 所有文件的默认配置
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python 文件
+[*.py]
+indent_size = 4
+indent_style = space
+
+# Markdown 文件
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML 文件
+[*.{yaml,yml}]
+indent_size = 2
+
+# JSON 文件
+[*.json]
+indent_size = 2
+
+# Shell 脚本
+[*.sh]
+indent_size = 2
+
+# Batch 文件
+[*.bat]
+indent_size = 4
+
+# Dockerfile
+[Dockerfile]
+indent_size = 2
+
+# 根目录文件
+[.*]
+indent_size = 2
+
+# 排除目录
+[**/{venv,env,.venv,build,dist,__pycache__}/**]
+insert_final_newline = false
+trim_trailing_whitespace = false

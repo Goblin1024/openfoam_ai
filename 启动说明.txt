@@ -1,0 +1,41 @@
+OpenFOAM 容器启动说明
+====================
+
+由于自动化工具的限制，请手动运行以下命令来启动 OpenFOAM 容器：
+
+方法一：使用批处理文件（推荐）
+-----------------------------
+双击运行：start_container.bat
+
+方法二：手动在命令行中运行
+-------------------------
+打开 Windows PowerShell 或 CMD，进入项目目录 E:\openfoam_ai，然后运行：
+
+docker run -it --name openfoam-workspace ^
+    --mount type=bind,source="%CD%",target=/workspace ^
+    -w /workspace ^
+    -e DISPLAY=host.docker.internal:0 ^
+    -e LIBGL_ALWAYS_INDIRECT=1 ^
+    openfoam/openfoam11-paraview510
+
+注意事项：
+---------
+1. 确保先启动 Docker Desktop
+2. 确保 VcXsrv 正在运行（用于图形界面）
+3. 首次运行可能需要较长时间
+4. 容器启动后，会自动进入 Linux shell
+5. 当前目录已挂载到容器的 /workspace
+
+常用操作：
+---------
+- 退出容器：按 Ctrl+D 或输入 exit
+- 重新进入：运行 attach_container.bat
+- 停止容器：docker stop openfoam-workspace
+- 删除容器：docker rm openfoam-workspace
+
+在容器内使用：
+-------------
+- source /opt/openfoam11/etc/bashrc  （加载 OpenFOAM 环境）
+- paraFoam  （启动 ParaView 可视化）
+- blockMesh （生成网格）
+- icoFoam   （运行求解器）
