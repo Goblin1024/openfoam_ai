@@ -7,6 +7,19 @@
 
 **让 CFD 仿真像说话一样简单** 🚀
 
+---
+
+<details>
+<summary><b>🌐 Language / 语言</b></summary>
+
+<br>
+
+**English | [中文](README_EN.md)**
+
+<br>
+
+</details>
+
 OpenFOAM AI Agent 是一个基于大语言模型的自动化 CFD（计算流体力学）仿真智能体系统。通过自然语言描述，AI 自动完成从几何建模到结果可视化的全流程。
 
 ## 🎯 核心特性

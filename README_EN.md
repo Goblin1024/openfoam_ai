@@ -7,6 +7,19 @@
 
 **Making CFD Simulations as Simple as Speaking** 🚀
 
+---
+
+<details>
+<summary><b>🌐 Language / 语言</b></summary>
+
+<br>
+
+**English | [中文](README.md)**
+
+<br>
+
+</details>
+
 OpenFOAM AI Agent is an automated CFD (Computational Fluid Dynamics) simulation agent system based on Large Language Models. Through natural language descriptions, AI automatically completes the entire process from geometric modeling to result visualization.
 
 ## 🎯 Core Features
