@@ -1,0 +1,349 @@
+# CFD步骤知识库
+# 包含仿真各步骤的详细说明和教学指南
+
+scenario:
+  name: 场景选择
+  description: 确定你要模拟的物理问题类型
+  purpose: CFD仿真的第一步，明确目标和边界条件类型
+  details:
+    beginner: |
+      什么是CFD仿真？
+      CFD（计算流体力学）是用计算机模拟流体（液体或气体）流动的方法。
+      就像用虚拟风洞测试飞机、汽车的气动性能，而不用造实体模型。
+
+      场景选择决定：
+      • 使用哪个求解器（icoFoam/simpleFoam/pimpleFoam等）
+      • 需要哪些物理模型（层流/湍流/传热/多相流）
+      • 边界条件的典型设置
+      • 网格生成的策略
+
+      常见场景：
+      • 顶盖驱动腔（cavity）：经典的流体力学测试案例，顶盖移动驱动腔内流动
+      • 圆柱绕流（cylinder）：研究涡脱落和卡门涡街
+      • 管道流动（pipe）：内部流动，研究压降和摩擦
+      • 后向台阶（backward_step）：研究流动分离和再附
+    intermediate: |
+      场景选择影响求解策略：
+      • 内部流动 vs 外部流动：边界条件设置截然不同
+      • 稳态 vs 瞬态：决定使用simpleFoam还是pimpleFoam
+      • 层流 vs 湍流：决定是否需要湍流模型
+      • 可压 vs 不可压：决定使用icoFoam还是rhoPimpleFoam
+
+      选择时需考虑：
+      • 雷诺数范围
+      • 是否有分离、再附、涡脱落等现象
+      • 是否需要时间精确解
+      • 计算资源限制
+    advanced: |
+      场景选择的技术考量：
+      • 几何复杂度与网格生成难度的权衡
+      • 物理现象的尺度分离（边界层vs主流区）
+      • 数值方法的适用性（密度基vs压力基）
+      • 验证与确认的可用实验数据
+
+      多物理场耦合场景：
+      • 流固耦合（FSI）
+      • 传热与流动耦合
+      • 化学反应与流动耦合
+      • 多相流与相变
+
+geometry:
+  name: 几何定义
+  description: 定义计算域的形状和尺寸
+  purpose: 建立流体流动的空间范围，是生成网格的基础
+  details:
+    beginner: |
+      什么是计算域？
+      计算域是你要模拟的流体所占的空间区域。就像给流动画一个"盒子"，
+      在这个盒子内求解流动方程。
+
+      关键概念：
+      • 2D vs 3D：二维问题计算快但近似，三维更准确但慢
+      • 特征长度：用于计算雷诺数，如圆柱的直径
+      • 阻塞率：物体截面积/域截面积，应<5%避免壁面影响
+
+      几何设置要点：
+      • 入口距离物体足够远（5-10倍特征长度），让流动充分发展
+      • 出口距离足够远，避免边界反射影响
+      • 侧边界（2D）或周向边界（3D）避免阻塞效应
+
+      简单几何用blockMesh，复杂几何用snappyHexMesh或外部CAD导入
+    intermediate: |
+      几何建模策略：
+      • 利用对称性减少计算量（但确保流动确实对称）
+      • 周期性边界模拟无限阵列（如叶栅）
+      • 多区域网格（chimera/overset）处理复杂运动
+
+      关键尺寸计算：
+      • 入口长度：充分发展湍流需50倍水力直径
+      • 尾流区：至少10倍特征长度捕捉涡脱落
+      • 边界层厚度：δ/x ≈ 0.37/Re_x^0.2（湍流平板）
+
+      几何简化原则：
+      • 保留影响流动的主要特征
+      • 去除对结果影响<1%的小特征
+      • 圆角处理避免网格畸变
+    advanced: |
+      高级几何处理：
+      • 参数化几何：便于优化和敏感性分析
+      • 拓扑修复：处理CAD模型中的缝隙、重叠面
+      • 特征抑制：小孔、小面在网格生成时的处理
+
+      多尺度几何：
+      • 边界层网格与主流区网格的过渡
+      • 局部加密策略（自适应网格）
+      • 滑移网格和动网格处理运动边界
+
+mesh:
+  name: 网格生成
+  description: 将计算域离散为有限个小单元
+  purpose: 网格是CFD的基础，决定计算精度和效率
+  details:
+    beginner: |
+      什么是网格？
+      网格是把计算域切成很多小格子（像马赛克），在每个格子里计算流动变量。
+      网格越密，结果越精确，但计算越慢。
+
+      网格类型：
+      • 结构化网格：排列整齐，计算效率高，适合简单几何
+      • 非结构化网格：灵活适应复杂几何，如四面体网格
+      • 混合网格：结合两者优点
+
+      网格质量指标：
+      • 数量：2D至少50x50，3D至少50x50x50
+      • 长宽比：尽量<10，避免细长单元
+      • 正交性：越接近90度越好
+      • 扭曲度：越小越好
+
+      blockMesh工作流程：
+      1. 定义顶点坐标
+      2. 定义块（block）和网格数
+      3. 定义边界（patch）
+      4. 运行blockMesh生成网格
+    intermediate: |
+      网格生成策略：
+      • 边界层网格：壁面法向加密，捕捉速度梯度
+        - y+计算：y+ = u_tau * y / ν
+        - 壁面函数：y+ = 30-300
+        - 直接求解：y+ < 1
+      • 剪切层加密：自由剪切层、尾流区加密
+      • 渐变率：相邻单元尺寸比<1.2
+
+      网格无关性验证：
+      • 用3套网格（粗、中、细）计算同一问题
+      • 对比关键结果（阻力系数、分离点等）
+      • 差异<5%认为网格足够
+
+      OpenFOAM网格工具：
+      • blockMesh：简单几何，结构化网格
+      • snappyHexMesh：复杂几何，自动加密
+      • cfMesh：另一种自动网格生成器
+      • extrudeMesh：2D网格拉伸成3D
+    advanced: |
+      高级网格技术：
+      • 自适应网格细化（AMR）：根据解的特征动态调整
+      • 滑移网格（sliding mesh）：处理旋转机械
+      • 重叠网格（overset/chimera）：复杂运动问题
+      • 多面体网格（polyMesh）：比四面体更高效
+
+      网格质量指标详解：
+      • 非正交性：<70可接受，<50良好，<20优秀
+      • 偏斜度：<1较好，<4可接受，>10危险
+      • 长宽比：<100可接受，<10良好
+      • 体积变化：<20较好
+
+      并行分区：
+      • decomposePar：将网格分区用于并行计算
+      • 分区策略：simple/hierarchical/scotch/metis
+
+boundary:
+  name: 边界条件设置
+  description: 定义计算域边界的物理条件
+  purpose: 边界条件是CFD问题的定义核心，决定解的唯一性
+  details:
+    beginner: |
+      什么是边界条件？
+      边界条件告诉求解器边界上发生什么。就像给房间设定：
+      • 窗户开多大（入口速度）
+      • 门通向哪里（出口压力）
+      • 墙壁是光滑还是粗糙（壁面条件）
+
+      常见边界类型：
+      • 入口（inlet）：fixedValue（固定速度）、flowRateInletVelocity（固定流量）
+      • 出口（outlet）：zeroGradient（自由流出）、fixedValue（固定压力）
+      • 壁面（wall）：noSlip（无滑移，速度=0）、slip（滑移，无摩擦）
+      • 对称（symmetry）：对称边界，无穿透、无剪切
+
+      速度边界设置：
+      • 均匀入口：internalField uniform (U_x U_y U_z)
+      • 抛物线入口：用codedFixedValue或timeVaryingMapped
+      • 壁面：uniform (0 0 0) 表示静止壁面
+
+      压力边界设置：
+      • 入口：zeroGradient（压力由内部外推）
+      • 出口：fixedValue uniform 0（表压为0）
+      • 壁面：zeroGradient
+    intermediate: |
+      边界条件匹配原则：
+      • 亚音速入口：指定速度，压力零梯度
+      • 亚音速出口：指定压力，速度零梯度
+      • 不可压流：压力相对值即可，通常出口设p=0
+      • 周期性边界：cyclic用于旋转机械，cyclicAMI用于不匹配网格
+
+      湍流边界条件：
+      • k（湍动能）：turbulentIntensityKineticEnergyInlet
+      • epsilon/omega：turbulentMixingLengthDissipationRateInlet
+      • 湍流强度：I = u'/U，通常1-5%
+      • 混合长度：l = 0.07*L（管流）
+
+      特殊边界：
+      • inletOutlet：允许回流的出口
+      • outletInlet：允许流入的出口
+      • pressureInletOutletVelocity：压力驱动的入口/出口
+      • movingWallVelocity：运动壁面
+    advanced: |
+      高级边界条件：
+      • timeVaryingMapped：实验数据映射入口
+      • groovyBC/swak4Foam：表达式定义边界
+      • codedFixedValue/codedMixed：自定义C++代码
+      • fan/vent：风扇特性曲线
+
+      多相流边界：
+      • alpha：体积分数边界
+      • phaseProperties：相间作用设置
+
+      传热边界：
+      • fixedTemperature：恒温壁面
+      • fixedHeatFlux：恒热流壁面
+      • externalWallHeatFluxTemperature：对流换热边界
+      • conjugateHeatTransfer：流固耦合传热
+
+solver:
+  name: 求解器配置
+  description: 选择并配置数值求解器
+  purpose: 求解器是计算的核心，选择不当会导致错误或效率低下
+  details:
+    beginner: |
+      什么是求解器？
+      求解器是解流动方程的程序。就像计算器有不同的计算模式，
+      CFD也有针对不同问题的求解器。
+
+      OpenFOAM常用求解器：
+      • icoFoam：瞬态不可压层流
+      • simpleFoam：稳态不可压湍流
+      • pimpleFoam：瞬态不可压湍流
+      • interFoam：多相流（VOF方法）
+      • buoyantBoussinesqPimpleFoam：自然对流
+
+      fvSchemes（离散格式）：
+      • ddt（时间项）：Euler（一阶）、CrankNicolson（二阶）
+      • grad（梯度）：Gauss linear
+      • div（对流项）：Gauss upwind（稳定）、Gauss linear（二阶）
+      • laplacian（扩散项）：Gauss linear corrected
+
+      fvSolution（求解设置）：
+      • 求解器：PCG/PBiCG（迭代求解器）、GAMG（多重网格）
+      • 预处理器：DILU、FDIC、GAMG
+      • 松弛因子：压力0.3，速度0.7
+    intermediate: |
+      求解器选择指南：
+      • 层流/湍流：层流直接求解NS方程，湍流需RANS/LES/DNS
+      • 稳态/瞬态：稳态用simpleFoam，瞬态用pimpleFoam
+      • 可压/不可压：马赫数<0.3可用不可压假设
+      • 单相/多相：自由表面用interFoam，分散相用Euler-Lagrange
+
+      离散格式选择：
+      • 一阶格式（upwind）：稳定但耗散大，适合初始迭代
+      • 二阶格式（linear、limitedLinear）：精度高但可能振荡
+      • TVD/ENO格式：捕捉激波，如vanLeer、MUSCL
+
+      收敛控制：
+      • 残差：通常1e-6，可在fvSolution中设置
+      • 库朗数：Co = U*dt/dx，显式<1，隐式<5
+      • 可调时间步：adjustTimeStep yes，根据Co自动调整
+    advanced: |
+      高级求解技术：
+      • PISO/SIMPLE/PIMPLE算法：压力-速度耦合
+        - PISO：瞬态，小时间步，无需迭代
+        - SIMPLE：稳态，需亚松弛
+        - PIMPLE：大时间步瞬态，内迭代
+      • 多重网格（GAMG）：加速压力求解
+      • 并行计算：decomposePar + mpirun
+
+      湍流模型选择：
+      • RANS：计算快，适合工程应用
+        - k-epsilon：高雷诺数，充分发展湍流
+        - k-omega SST：近壁区更准确，适合逆压梯度
+        - Spalart-Allmaras：航空应用，计算量小
+      • LES：大涡模拟，时间精确，计算量大
+      • DES/DLES：RANS-LES混合
+
+      数值稳定性：
+      • 人工粘性：必要时添加
+      • 梯度限制器：防止非物理振荡
+      • 压力参考点：封闭域需设定pRefCell和pRefValue
+
+review:
+  name: 结果验证
+  description: 检查结果的正确性和合理性
+  purpose: 确保仿真结果可信，发现并修正问题
+  details:
+    beginner: |
+      如何检查结果？
+      CFD结果需要验证才能相信。就像做实验要重复验证，
+      仿真也需要多种方式确认。
+
+      基本检查清单：
+      □ 残差是否收敛到1e-6以下？
+      □ 库朗数是否稳定？
+      □ 速度场是否合理（无异常大值）？
+      □ 压力场是否光滑（无剧烈振荡）？
+      □ 质量守恒是否满足（进出口流量平衡）？
+
+      可视化检查：
+      • 速度云图：观察流动分离、涡旋
+      • 流线图：观察流动路径
+      • 压力分布：检查高压/低压区是否合理
+
+      常见错误迹象：
+      • 残差不下降：网格或时间步问题
+      • 结果振荡：时间步太大或格式不稳定
+      • 非物理值：边界条件设置错误
+    intermediate: |
+      验证与确认（V&V）：
+      • 验证（Verification）：数值解是否正确实现
+        - 网格无关性验证
+        - 时间步独立性验证
+        - 与解析解对比
+      • 确认（Validation）：模型是否正确描述物理
+        - 与实验数据对比
+        - 与文献结果对比
+
+      定量分析：
+      • 升阻力系数：与实验或文献对比
+      • 分离点位置：观察再附长度
+      • 斯特劳哈尔数：涡脱落频率
+      • 努塞尔数：传热系数
+
+      不确定性量化：
+      • 参数敏感性分析
+      • 输入误差传播
+      • 模型形式误差估计
+    advanced: |
+      高级验证技术：
+      • Richardson外推：估计离散误差
+      • 伴随方法：敏感性分析和误差估计
+      • 贝叶斯校准：模型参数反演
+      • 模型形式误差：RANS模型不确定性
+
+      结果分析工具：
+      • 采样：probes、sampleDict
+      • 力计算：forces、forceCoeffs
+      • 场运算：foamCalc、postProcess
+      • 自定义后处理：functionObjects
+
+      最佳实践：
+      • 保存所有设置文件便于复现
+      • 记录计算时间和资源
+      • 生成自动化报告
+      • 建立案例数据库

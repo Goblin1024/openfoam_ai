@@ -1,0 +1,206 @@
+# CFD术语表
+# 包含CFD领域的专业术语及其解释
+
+CFD:
+  cn: 计算流体力学
+  desc: 用数值方法求解流体流动问题的学科
+
+雷诺数:
+  cn: 雷诺数
+  en: Reynolds Number
+  desc: 惯性力与粘性力之比，Re=ρUL/μ
+
+马赫数:
+  cn: 马赫数
+  en: Mach Number
+  desc: 流速与当地声速之比，Ma=U/a
+
+库朗数:
+  cn: 库朗数
+  en: Courant Number
+  desc: 时间步稳定性判据，Co=UΔt/Δx
+
+层流:
+  cn: 层流
+  en: Laminar Flow
+  desc: 流体分层流动，无涡旋混合
+
+湍流:
+  cn: 湍流
+  en: Turbulent Flow
+  desc: 流体不规则脉动，强烈混合
+
+边界层:
+  cn: 边界层
+  en: Boundary Layer
+  desc: 壁面附近速度急剧变化的薄层
+
+分离:
+  cn: 流动分离
+  en: Flow Separation
+  desc: 流体脱离壁面的现象
+
+再附:
+  cn: 再附
+  en: Reattachment
+  desc: 分离后的流体重新附着壁面
+
+涡:
+  cn: 涡旋
+  en: Vortex
+  desc: 流体绕中心旋转的运动
+
+卡门涡街:
+  cn: 卡门涡街
+  en: Karman Vortex Street
+  desc: 圆柱后交替脱落的涡列
+
+斯特劳哈尔数:
+  cn: 斯特劳哈尔数
+  en: Strouhal Number
+  desc: 涡脱落频率的无量纲数，St=fD/U
+
+阻力系数:
+  cn: 阻力系数
+  en: Drag Coefficient
+  desc: 无量纲阻力，Cd=D/(0.5ρU²A)
+
+升力系数:
+  cn: 升力系数
+  en: Lift Coefficient
+  desc: 无量纲升力，Cl=L/(0.5ρU²A)
+
+N-S方程:
+  cn: 纳维-斯托克斯方程
+  en: Navier-Stokes Equations
+  desc: 描述流体运动的基本方程
+
+连续性方程:
+  cn: 连续性方程
+  en: Continuity Equation
+  desc: 质量守恒的数学表达
+
+动量方程:
+  cn: 动量方程
+  en: Momentum Equation
+  desc: 牛顿第二定律在流体中的应用
+
+能量方程:
+  cn: 能量方程
+  en: Energy Equation
+  desc: 能量守恒的数学表达
+
+RANS:
+  cn: 雷诺平均
+  en: Reynolds-Averaged Navier-Stokes
+  desc: 对N-S方程进行时间平均的方法
+
+LES:
+  cn: 大涡模拟
+  en: Large Eddy Simulation
+  desc: 直接模拟大涡，模型化小涡
+
+DNS:
+  cn: 直接数值模拟
+  en: Direct Numerical Simulation
+  desc: 直接求解所有尺度的湍流
+
+k-epsilon:
+  cn: k-ε模型
+  en: k-epsilon Model
+  desc: 两方程湍流模型，适合高Re流动
+
+k-omega:
+  cn: k-ω模型
+  en: k-omega Model
+  desc: 两方程湍流模型，近壁区更准确
+
+y+:
+  cn: y+
+  en: y-plus
+  desc: 无量纲壁面距离，决定壁面处理方式
+
+壁面函数:
+  cn: 壁面函数
+  en: Wall Function
+  desc: 用经验公式代替边界层内求解
+
+残差:
+  cn: 残差
+  en: Residual
+  desc: 方程不满足程度的度量
+
+收敛:
+  cn: 收敛
+  en: Convergence
+  desc: 解达到稳定状态的过程
+
+松弛因子:
+  cn: 松弛因子
+  en: Relaxation Factor
+  desc: 控制迭代更新幅度的系数
+
+网格:
+  cn: 网格
+  en: Mesh/Grid
+  desc: 计算域的离散单元集合
+
+结构化网格:
+  cn: 结构化网格
+  en: Structured Grid
+  desc: 规则排列的网格，如四边形/六面体
+
+非结构化网格:
+  cn: 非结构化网格
+  en: Unstructured Grid
+  desc: 不规则连接的网格，如三角形/四面体
+
+边界条件:
+  cn: 边界条件
+  en: Boundary Condition
+  desc: 边界上的物理约束条件
+
+初始条件:
+  cn: 初始条件
+  en: Initial Condition
+  desc: 计算开始时的流场状态
+
+有限体积法:
+  cn: 有限体积法
+  en: Finite Volume Method
+  desc: 基于控制体积的离散方法
+
+迎风格式:
+  cn: 迎风格式
+  en: Upwind Scheme
+  desc: 稳定的对流项离散格式
+
+中心差分:
+  cn: 中心差分
+  en: Central Differencing
+  desc: 二阶精度的离散格式
+
+SIMPLE算法:
+  cn: SIMPLE算法
+  en: Semi-Implicit Method for Pressure-Linked Equations
+  desc: 压力-速度耦合求解算法
+
+PISO算法:
+  cn: PISO算法
+  en: Pressure Implicit with Splitting of Operators
+  desc: 瞬态压力-速度耦合算法
+
+多重网格:
+  cn: 多重网格
+  en: Multigrid
+  desc: 加速求解的层次化方法
+
+并行计算:
+  cn: 并行计算
+  en: Parallel Computing
+  desc: 多处理器同时计算
+
+OpenFOAM:
+  cn: OpenFOAM
+  en: Open Field Operation and Manipulation
+  desc: 开源CFD软件包

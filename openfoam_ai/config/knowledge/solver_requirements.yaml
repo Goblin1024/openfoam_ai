@@ -1,0 +1,892 @@
+# OpenFOAM 求解器需求配置
+# 定义每个求解器需要的字典文件和初始场
+
+# ============================================================================
+# 不可压缩流求解器
+# ============================================================================
+
+icoFoam:
+  description: "不可压缩层流瞬态求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: false
+    turbulence: laminar
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+
+pisoFoam:
+  description: "不可压缩层流瞬态求解器（PISO算法）"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: false
+    turbulence: laminar
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+
+simpleFoam:
+  description: "不可压缩稳态湍流求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: false
+    turbulence: RAS
+    time: steady
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+pimpleFoam:
+  description: "不可压缩瞬态湍流求解器（大时间步PIMPLE算法）"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: false
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+# ============================================================================
+# 传热求解器
+# ============================================================================
+
+buoyantSimpleFoam:
+  description: "浮力驱动不可压缩稳态传热求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: steady
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+    - name: alphat
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+buoyantPimpleFoam:
+  description: "浮力驱动不可压缩瞬态传热求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+    - name: alphat
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+buoyantBoussinesqSimpleFoam:
+  description: "Boussinesq近似浮力驱动稳态传热求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: steady
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+# ============================================================================
+# 多相流求解器
+# ============================================================================
+
+interFoam:
+  description: "两相流体积分数法（VOF）求解器"
+  physics:
+    compressible: false
+    phases: two
+    heat_transfer: false
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: alpha.water
+      type: volScalarField
+      dimensions: [0, 0, 0, 0, 0, 0, 0]
+      default_internal: 0
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+interIsoFoam:
+  description: "两相流等值面VOF求解器"
+  physics:
+    compressible: false
+    phases: two
+    heat_transfer: false
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: alpha.water
+      type: volScalarField
+      dimensions: [0, 0, 0, 0, 0, 0, 0]
+      default_internal: 0
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+
+multiphaseInterFoam:
+  description: "多相VOF求解器"
+  physics:
+    compressible: false
+    phases: multi
+    heat_transfer: false
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - transportProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: alpha.*
+      type: volScalarField
+      dimensions: [0, 0, 0, 0, 0, 0, 0]
+      default_internal: 0
+      note: "多个相分数场，如alpha.water, alpha.oil等"
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+
+# ============================================================================
+# 可压缩流求解器
+# ============================================================================
+
+rhoSimpleFoam:
+  description: "可压缩稳态湍流求解器"
+  physics:
+    compressible: true
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: steady
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+    - turbulenceProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+    - name: alphat
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+rhoPimpleFoam:
+  description: "可压缩瞬态湍流求解器"
+  physics:
+    compressible: true
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+    - turbulenceProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+    - name: k
+      type: volScalarField
+      dimensions: [0, 2, -2, 0, 0, 0, 0]
+      default_internal: 0.1
+    - name: epsilon
+      type: volScalarField
+      dimensions: [0, 2, -3, 0, 0, 0, 0]
+      default_internal: 0.01
+    - name: omega
+      type: volScalarField
+      dimensions: [0, 0, -1, 0, 0, 0, 0]
+      default_internal: 1
+      note: "用于kOmegaSST/kOmega模型，替代epsilon"
+    - name: nut
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+    - name: alphat
+      type: volScalarField
+      dimensions: [0, 2, -1, 0, 0, 0, 0]
+      default_internal: 0
+
+rhoCentralFoam:
+  description: "可压缩无粘/层流瞬态求解器（中心格式）"
+  physics:
+    compressible: true
+    phases: single
+    heat_transfer: false
+    turbulence: laminar
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+
+sonicFoam:
+  description: "可压缩跨音速/超音速瞬态求解器"
+  physics:
+    compressible: true
+    phases: single
+    heat_transfer: true
+    turbulence: laminar
+    time: transient
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+  initial_fields:
+    - name: p
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 101325
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+
+# ============================================================================
+# 共轭传热求解器
+# ============================================================================
+
+chtMultiRegionFoam:
+  description: "共轭传热多区域瞬态求解器"
+  physics:
+    compressible: false
+    phases: single
+    heat_transfer: true
+    turbulence: RAS
+    time: transient
+    conjugate: true
+  required_dicts:
+    - blockMeshDict
+    - controlDict
+    - fvSchemes
+    - fvSolution
+    - thermophysicalProperties
+    - turbulenceProperties
+    - g
+  initial_fields:
+    - name: p_rgh
+      type: volScalarField
+      dimensions: [1, -1, -2, 0, 0, 0, 0]
+      default_internal: 0
+    - name: U
+      type: volVectorField
+      dimensions: [0, 1, -1, 0, 0, 0, 0]
+      default_internal: [0, 0, 0]
+    - name: T
+      type: volScalarField
+      dimensions: [0, 0, 0, 1, 0, 0, 0]
+      default_internal: 300
+
+# ============================================================================
+# 湍流模型配置
+# ============================================================================
+
+turbulence_models:
+  laminar:
+    description: "层流"
+    simulation_type: laminar
+    fields: []
+    
+  kEpsilon:
+    description: "标准k-ε湍流模型"
+    simulation_type: RAS
+    fields:
+      - k
+      - epsilon
+      - nut
+    wall_function_compatible: true
+    yplus_requirement: "y+ > 30"
+    
+  realizableKE:
+    description: "可实现k-ε湍流模型"
+    simulation_type: RAS
+    fields:
+      - k
+      - epsilon
+      - nut
+    wall_function_compatible: true
+    yplus_requirement: "y+ > 30"
+    
+  kOmegaSST:
+    description: "k-ω SST湍流模型（Menter）"
+    simulation_type: RAS
+    fields:
+      - k
+      - omega
+      - nut
+    wall_function_compatible: false
+    yplus_requirement: "y+ < 1 (推荐) 或 y+ > 30"
+    
+  kOmega:
+    description: "标准k-ω湍流模型"
+    simulation_type: RAS
+    fields:
+      - k
+      - omega
+      - nut
+    wall_function_compatible: false
+    yplus_requirement: "y+ < 1"
+    
+  SpalartAllmaras:
+    description: "Spalart-Allmaras一方程模型"
+    simulation_type: RAS
+    fields:
+      - nuTilda
+      - nut
+    wall_function_compatible: true
+    yplus_requirement: "y+ > 30 (壁面函数) 或 y+ < 1 (低Re)"
+
+  LES:
+    description: "大涡模拟"
+    simulation_type: LES
+    fields:
+      - k
+      - nut
+    wall_function_compatible: false
+    yplus_requirement: "y+ < 1"
+    note: "需要非常精细的网格"
+
+# ============================================================================
+# 热物性模型配置
+# ============================================================================
+
+thermophysical_models:
+  # 不可压缩传热
+  heRhoThermo:
+    description: "可变密度传热模型（用于浮力驱动流）"
+    thermo_type: heRhoThermo<pureMixture<const<rhoThermoPhysics>>
+    suitable_for:
+      - buoyantSimpleFoam
+      - buoyantPimpleFoam
+      
+  # 可压缩流
+  hePsiThermo:
+    description: "可压缩传热模型"
+    thermo_type: hePsiThermo<pureMixture<const<psiThermoPhysics>>
+    suitable_for:
+      - rhoSimpleFoam
+      - rhoPimpleFoam
+      
+  # Boussinesq近似
+  Boussinesq:
+    description: "Boussinesq近似传热模型"
+    suitable_for:
+      - buoyantBoussinesqSimpleFoam
+
+# ============================================================================
+# 默认物性参数
+# ============================================================================
+
+default_properties:
+  air_20C:
+    name: "空气 @ 20°C"
+    rho: 1.204  # kg/m³
+    mu: 1.825e-5  # Pa·s
+    nu: 1.516e-5  # m²/s
+    Cp: 1005  # J/(kg·K)
+    Pr: 0.729
+    k: 0.0257  # W/(m·K)
+    beta: 0.00343  # 1/K (热膨胀系数)
+    T_ref: 293.15  # K
+    
+  air_25C:
+    name: "空气 @ 25°C"
+    rho: 1.184
+    mu: 1.849e-5
+    nu: 1.562e-5
+    Cp: 1007
+    Pr: 0.729
+    k: 0.0262
+    beta: 0.00336
+    T_ref: 298.15
+    
+  water_20C:
+    name: "水 @ 20°C"
+    rho: 998.2
+    mu: 1.002e-3
+    nu: 1.004e-6
+    Cp: 4182
+    Pr: 7.01
+    k: 0.598
+    beta: 0.000207
+    T_ref: 293.15
+    
+  water_25C:
+    name: "水 @ 25°C"
+    rho: 997.1
+    mu: 8.90e-4
+    nu: 8.93e-7
+    Cp: 4180
+    Pr: 6.13
+    k: 0.607
+    beta: 0.000257
+    T_ref: 298.15
+
+# ============================================================================
+# 边界条件模板
+# ============================================================================
+
+boundary_condition_templates:
+  # 速度场 U
+  U_inlet:
+    type: fixedValue
+    value: uniform (1 0 0)
+    description: "入口速度"
+    
+  U_outlet:
+    type: zeroGradient
+    description: "出口速度"
+    
+  U_wall:
+    type: noSlip
+    description: "壁面无滑移"
+    
+  U_wall_moving:
+    type: fixedValue
+    value: uniform (1 0 0)
+    description: "移动壁面"
+    
+  U_symmetry:
+    type: symmetry
+    description: "对称面"
+    
+  U_empty:
+    type: empty
+    description: "2D前后表面"
+
+  # 压力场 p / p_rgh
+  p_inlet:
+    type: zeroGradient
+    description: "入口压力"
+    
+  p_outlet:
+    type: fixedValue
+    value: uniform 0
+    description: "出口压力"
+    
+  p_wall:
+    type: zeroGradient
+    description: "壁面压力"
+    
+  p_symmetry:
+    type: symmetry
+    description: "对称面"
+    
+  p_empty:
+    type: empty
+    description: "2D前后表面"
+
+  # 温度场 T
+  T_inlet:
+    type: fixedValue
+    value: uniform 300
+    description: "入口温度"
+    
+  T_outlet:
+    type: zeroGradient
+    description: "出口温度"
+    
+  T_wall:
+    type: fixedValue
+    value: uniform 350
+    description: "固定温度壁面"
+    
+  T_wall_heatflux:
+    type: externalWallHeatFlux
+    mode: flux
+    q: uniform 1000
+    description: "热流壁面"
+    
+  T_wall_adiabatic:
+    type: zeroGradient
+    description: "绝热壁面"
+
+  # 湍流场 k, epsilon, omega, nut
+  k_inlet:
+    type: fixedValue
+    value: uniform 0.1
+    description: "入口湍动能"
+    
+  k_wall:
+    type: kqRWallFunction
+    value: uniform 0.1
+    description: "壁面湍动能"
+    
+  epsilon_inlet:
+    type: fixedValue
+    value: uniform 0.01
+    description: "入口耗散率"
+    
+  epsilon_wall:
+    type: epsilonWallFunction
+    value: uniform 0.01
+    description: "壁面耗散率"
+    
+  omega_inlet:
+    type: fixedValue
+    value: uniform 1
+    description: "入口比耗散率"
+    
+  omega_wall:
+    type: omegaWallFunction
+    value: uniform 1
+    description: "壁面比耗散率"
+    
+  nut_inlet:
+    type: calculated
+    value: uniform 0
+    description: "入口湍流粘度"
+    
+  nut_wall:
+    type: nutkWallFunction
+    value: uniform 0
+    description: "壁面湍流粘度（标准k-ε）"
+    
+  nut_wall_lowRe:
+    type: nutLowReWallFunction
+    value: uniform 0
+    description: "壁面湍流粘度（低Re）"
+
+  # 相分数场 alpha
+  alpha_inlet_water:
+    type: fixedValue
+    value: uniform 1
+    description: "入口水相"
+    
+  alpha_inlet_air:
+    type: fixedValue
+    value: uniform 0
+    description: "入口气相"
+    
+  alpha_outlet:
+    type: inletOutlet
+    inletValue: uniform 0
+    value: uniform 0
+    description: "出口相分数"
+    
+  alpha_wall:
+    type: zeroGradient
+    description: "壁面相分数"

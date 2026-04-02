@@ -1,0 +1,9 @@
+{
+  "name": "cavity_flow_100",
+  "path": "E:\\openfoam_ai\\demo_cases\\cavity_flow_100",
+  "created_at": "2026-03-29 21:38:58",
+  "modified_at": "2026-03-29 21:38:58",
+  "physics_type": "incompressible",
+  "solver": "",
+  "status": "init"
+}

@@ -1,0 +1,160 @@
+# OpenFOAM AI Agent - 项目宪法
+# 这是系统的核心约束规则，用于防止AI幻觉和次优配置
+
+Core_Directives:
+  - "严禁使用过度简化的二维粗网格代替三维真实网格进行最终测试"
+  - "所有对流传热测试必须验证能量守恒，进出口热量误差不得超过 0.1%"
+  - "涉及参数反演或敏感性分析时，必须提供残差收敛至 1e-6 以下的证明"
+  - "边界层网格必须满足所选湍流模型的 y+ 要求"
+  - "瞬态计算必须验证时间步长独立性"
+  - "不要使用低于20x20的网格进行正式计算"
+  - "默认使用至少100个时间步的输出间隔以保证数据完整性"
+
+core_directives_teaching_note: "核心准则是CFD仿真的'红线'，不可逾越。用粗网格做最终测试就像用草稿纸交作业——结果不可信。验证能量守恒是传热问题的底线，就像做账必须收支平衡。残差收敛证明计算真的'算完了'而不是中途放弃。y+要求确保边界层处理正确，就像量身高必须站直。时间步独立性验证确保结果不是时间步的'假象'。这些准则是无数工程师经验的结晶，遵守它们能避免90%的常见错误。"
+
+Mesh_Standards:
+  min_cells_2d: 400        # 2D最小网格数 (20x20)
+  min_cells_3d: 8000       # 3D最小网格数 (20x20x20)
+  max_aspect_ratio: 100
+  max_non_orthogonality: 70
+  min_cells_per_direction: 20   # 每个方向最小网格数（用于验证）
+  y_plus_target_wall_function: [30, 300]
+  y_plus_target_resolved: [0, 5]
+  boundary_layer_growth_rate: 1.2
+  teaching_note: "网格就像照片的像素——像素越多细节越清晰，但文件也越大。2D仿真至少需要400个网格单元（如20×20），3D至少需要8000个（如20×20×20）。网格太少会导致结果不准确，就像用很少的像素显示图片会模糊一样。关键区域（如边界层、尾流）需要局部加密。"
+
+Solver_Standards:
+  min_convergence_residual: 1e-6
+  max_courant_explicit: 0.5
+  max_courant_implicit: 5.0
+  relaxation_factor_min: 0.1
+  relaxation_factor_max: 0.9
+  default_write_interval: 100
+  divergence_threshold: 1.0      # 残差发散阈值
+  courant_limit_general: 1.0     # 通用库朗数限制
+  teaching_note: "求解器设置决定计算的稳定性和精度。收敛残差1e-6意味着方程求解精度达到99.9999%。库朗数Co=U·Δt/Δx是瞬态计算的稳定性判据——就像跑步时步子不能太大否则会摔倒，显式格式要求Co<0.5，隐式格式可放宽到5.0。松弛因子像开车的方向盘调整幅度，小值稳定但慢，大值快但可能失控。"
+
+Validation_Requirements:
+  mass_conservation_tolerance: 0.001   # 0.1%
+  energy_conservation_tolerance: 0.001 # 0.1%
+  force_balance_tolerance: 0.01        # 1%
+  teaching_note: "验证是CFD的生命线。质量守恒误差要求<0.1%，就像水库的进水量和出水量应该基本相等，差太多说明有'漏水'（数值误差）。能量守恒同样重要，传热问题中进出口热量差应<0.1%。力平衡验证确保压力、粘性力、外力的合力合理，就像牛顿定律F=ma必须满足。"
+
+Physical_Constraints:
+  min_reynolds_number: 0.1
+  max_reynolds_number: 100000000
+  min_prandtl_number: 0.001
+  max_prandtl_number: 100000
+  
+  # 流体物性范围
+  kinematic_viscosity:
+    min: 1.0e-7    # 水
+    max: 1.0e-2    # 高粘度油
+  
+  density:
+    min: 0.1       # 气体
+    max: 20000     # 液体金属
+  
+  teaching_note: "物理约束确保参数在合理范围。雷诺数Re=UL/ν决定流动状态——就像搅拌液体的快慢，Re<2300是顺滑的层流，Re>4000是混乱的湍流。运动粘度ν是流体抵抗流动的能力：水约1e-6 m²/s（很顺滑），蜂蜜约1e-3 m²/s（很粘稠），空气约1.5e-5 m²/s。密度ρ：空气约1.2 kg/m³，水约1000 kg/m³。设置错误会导致非物理解。"
+
+Prohibited_Combinations:
+  # 教学说明：某些求解器和物理模型的组合是错误的，就像用自行车轮胎装汽车——根本不匹配
+  # 例如：icoFoam是'不可压层流瞬态'求解器，不能用于可压流；
+  # simpleFoam是稳态求解器，不能用于瞬态问题；
+  # 高雷诺数流动必须用湍流模型，层流假设会导致完全错误的结果
+  teaching_note: "某些求解器和物理模型的组合是错误的，就像用自行车轮胎装汽车——根本不匹配。例如：icoFoam是'不可压层流瞬态'求解器，不能用于可压流；simpleFoam是稳态求解器，不能用于瞬态问题；高雷诺数流动必须用湍流模型，层流假设会导致完全错误的结果。选择求解器前务必确认它支持你的物理模型。"
+  items:
+    - solver: icoFoam
+      physics: compressible
+      reason: "icoFoam不可用于可压流"
+    
+    - solver: simpleFoam
+      requirement: steady_state
+      reason: "simpleFoam仅用于稳态"
+    
+    - turbulence_model: laminar
+      condition: "Re > 2300 in pipes"
+      reason: "高雷诺数流动必须使用湍流模型"
+
+Quality_Checks:
+  pre_run:
+    - "网格质量检查 (checkMesh)"
+    - "边界条件完整性检查"
+    - "物理参数合理性检查"
+    - "CFL条件检查"
+  
+  during_run:
+    - "库朗数监控"
+    - "残差收敛监控"
+    - "连续性误差监控"
+  
+  post_run:
+    - "质量守恒验证"
+    - "能量守恒验证（传热问题）"
+    - "力平衡验证（如适用）"
+    - "结果合理性检查"
+  
+  teaching_note: "质量检查贯穿仿真全流程。跑前检查就像开车前检查轮胎和油量——网格质量决定计算能否顺利进行，边界条件错误会导致完全错误的结果。跑中监控像看仪表盘——库朗数太高要减速（减小时间步），残差不下降要排查问题。跑后验证像体检——确认结果物理合理，与实验或理论对比。跳过检查就像蒙眼开车，迟早出问题。"
+
+Error_Handling:
+  mesh_quality_fail:
+    action: "attempt_auto_fix"
+    max_attempts: 3
+  
+  divergence_detected:
+    action: "reduce_timestep"
+    reduction_factor: 0.5
+    min_timestep: 1.0e-6
+  
+  convergence_stall:
+    action: "adjust_relaxation"
+    or: "refine_mesh"
+  
+  teaching_note: "错误处理是CFD仿真的保险机制。网格质量差时自动修复就像汽车自动修正方向。发散检测时自动减小时间步——就像发现车开太快要失控时踩刹车减速。残差停滞时调整松弛因子或加密网格——就像车爬坡动力不足时换挡或换条好路。这些自动处理能挽救很多本失败的计算，但理解原理才能更好应对复杂情况。"
+
+Documentation_Requirements:
+  - "每个算例必须包含 README.md 说明设置"
+  - "所有边界条件必须在文档中解释"
+  - "关键结果必须截图保存"
+  - "收敛历史必须记录"
+
+documentation_teaching_note: "文档记录是CFD仿真的'黑匣子'——当结果有问题或需要复现时，完整的文档能帮你快速定位问题。README说明设置就像食谱记录配料和步骤；边界条件解释确保他人理解你的假设；结果截图保存可视化证据；收敛历史证明计算确实收敛。没有文档的CFD就像没有标签的试剂，别人（包括未来的你自己）无法判断可信度。"
+
+# ============================================================
+# 以下为 Task #15-19 新增功能的宪法约束规则
+# ============================================================
+
+conservation_validation:
+  description: "守恒性验证约束"
+  rules:
+    - "质量守恒：仿真完成后必须验证进出口流量平衡，误差不得超过0.1%"
+    - "能量守恒：传热问题必须验证能量平衡，误差不得超过0.1%"
+    - "连续性误差：求解过程中连续性误差不得超过1e-6"
+  teaching_note: "守恒性是物理仿真可信度的基本底线，任何违反守恒定律的结果都不可接受"
+
+yplus_requirements:
+  description: "y+值与壁面函数兼容性约束"
+  rules:
+    - "使用k-omega SST模型时，壁面网格y+值建议小于5，最佳为1左右"
+    - "使用标准壁面函数时，y+值应在30-300范围内"
+    - "LES计算要求y+小于2"
+    - "系统必须在网格生成后检查y+兼容性并给出警告"
+  teaching_note: "y+值决定了壁面附近流动的解析精度，错误的y+会导致湍流计算完全不可信"
+
+numerical_scheme_constraints:
+  description: "数值格式选择约束"
+  rules:
+    - "禁止在LES计算中使用一阶迎风格式（upwind），这会完全抹杀湍流结构"
+    - "初始化阶段可使用低阶格式，但正式计算必须使用至少二阶格式"
+    - "多相流界面追踪（alpha方程）必须使用有界格式（如vanLeer）"
+    - "发散时应先尝试格式降级，再考虑减小时间步"
+  teaching_note: "数值格式直接决定计算精度和稳定性，选择不当是发散的主要原因之一"
+
+solver_selection_constraints:
+  description: "求解器选择约束"
+  rules:
+    - "系统必须通过问卷向导确认物理场景后再选择求解器，不得随意假设"
+    - "浮力驱动流必须使用buoyant系列求解器"
+    - "多相流必须使用VOF或类似界面追踪方法"
+    - "可压缩流（Ma>0.3）必须使用rho系列求解器"
+  teaching_note: "求解器选择是仿真的第一步也是最关键的一步，错误的求解器会导致完全错误的结果"

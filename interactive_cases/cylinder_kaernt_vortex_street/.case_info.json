@@ -1,0 +1,63 @@
+{
+  "name": "cylinder_kaernt_vortex_street",
+  "path": "E:\\openfoam_ai\\interactive_cases\\cylinder_kaernt_vortex_street",
+  "created_at": "2026-03-30 10:46:59",
+  "physics_type": "incompressible",
+  "solver": {
+    "name": "icoFoam",
+    "endTime": 10,
+    "deltaT": 0.01
+  },
+  "geometry": {
+    "dimensions": {
+      "L": 10,
+      "W": 10,
+      "H": 10
+    },
+    "mesh_resolution": {
+      "nx": 100,
+      "ny": 100,
+      "nz": 100
+    }
+  },
+  "boundary_conditions": {
+    "inlet": {
+      "type": "velocityInlet",
+      "value": {
+        "U": 1,
+        "V": 0,
+        "W": 0
+      }
+    },
+    "outlet": {
+      "type": "pressureOutlet",
+      "value": 0
+    },
+    "cylinder": {
+      "type": "noSlip",
+      "value": {
+        "U": 0,
+        "V": 0,
+        "W": 0
+      }
+    },
+    "frontAndBack": {
+      "type": "symmetry",
+      "value": {
+        "U": 0,
+        "V": 0,
+        "W": 0
+      }
+    },
+    "sides": {
+      "type": "symmetry",
+      "value": {
+        "U": 0,
+        "V": 0,
+        "W": 0
+      }
+    }
+  },
+  "nu": 0.01,
+  "status": "init"
+}

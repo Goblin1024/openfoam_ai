@@ -1,0 +1,528 @@
+# CFD参数知识库
+# 包含仿真参数的详细说明、典型取值、使用建议等
+
+nu:
+  name: 运动粘度
+  name_en: Kinematic Viscosity
+  symbol: "ν (nu)"
+  unit: m²/s
+  description: 流体的运动粘度，表示流体抵抗流动的能力，是动力粘度与密度的比值
+  typical_range:
+    水(20°C): 1.0e-6
+    空气(20°C): 1.5e-5
+    蜂蜜: 1.0
+    机油: 1.0e-4
+    甘油: 1.12e-3
+  why_matters: 粘度直接决定雷诺数 Re = UL/ν，影响流动状态（层流/湍流）。雷诺数<2300通常为层流，>4000为湍流
+  analogy: 就像搅拌不同液体的阻力感——水很顺滑（粘度小），蜂蜜很粘稠（粘度大）
+  tips:
+    beginner: 如果模拟水流，设为1e-6；模拟空气，设为1.5e-5。不确定时先用水或空气的默认值
+    intermediate: 注意温度对粘度的影响，高温粘度降低。20°C水的粘度是1e-6，80°C时降至约3.6e-7
+    advanced: 考虑非牛顿流体时需使用合适的粘度模型，如幂律模型、Herschel-Bulkley模型等
+
+deltaT:
+  name: 时间步长
+  name_en: Time Step Size
+  symbol: "Δt"
+  unit: s
+  description: 瞬态仿真中每个计算步的时间间隔，决定时间推进的精细程度
+  typical_range:
+    低速流动: 0.001-0.01
+    中速流动: 1e-5-1e-4
+    高速流动: 1e-7-1e-5
+    声学问题: 1e-8-1e-6
+  why_matters: 时间步长必须满足CFL条件，过大导致发散，过小计算太慢。库朗数Co = U·Δt/Δx应<1（显式）或<5（隐式）
+  analogy: 就像拍摄快速运动物体——快门速度太慢会模糊（信息丢失），太快则照片太多处理不过来
+  tips:
+    beginner: 先用小时间步（如0.001），观察库朗数报告，确保Co<1。如果发散，再减小10倍
+    intermediate: 根据估计流速和网格尺寸估算：Δt < Δx/U。可先试算几个步观察库朗数
+    advanced: 可采用自适应时间步（adjustTimeStep yes），让求解器自动根据CFL条件调整
+
+endTime:
+  name: 结束时间
+  name_en: End Time
+  symbol: T_end
+  unit: s
+  description: 瞬态仿真的总计算时长，决定模拟的物理时间跨度
+  typical_range:
+    涡脱落周期观察: 5-10个周期
+    启动过程: 5-10个流动通过时间
+    统计稳态: 20-50个流动通过时间
+    长时间演化: 按需设定
+  why_matters: 必须足够长以捕捉感兴趣的流动现象，如涡脱落、启动瞬态等。太短无法获得稳态统计，太长浪费计算资源
+  analogy: 就像看一场电影——必须看到结尾才能知道故事全貌，但没必要一直看到字幕结束
+  tips:
+    beginner: 不确定时先设小一点（如1.0），观察结果后再延长。可以通过动画判断流动是否达到稳定状态
+    intermediate: 估算流动通过时间：L/U。对于圆柱绕流，建议至少模拟10个涡脱落周期
+    advanced: 可结合functionObject监控升阻力系数，当统计量稳定时提前终止，无需预设固定endTime
+
+nx:
+  name: X方向网格数
+  name_en: Number of Cells in X
+  symbol: Nx
+  unit: 个
+  description: 计算域在X方向的网格划分数量，决定该方向的空间分辨率
+  typical_range:
+    粗网格: 20-50
+    中等网格: 50-200
+    精细网格: 200-1000
+    DNS/LES: 1000+
+  why_matters: 网格数直接影响计算精度和成本。关键区域（如边界层、剪切层）需要足够分辨率才能捕捉流动细节
+  analogy: 就像照片的像素——像素越多细节越清晰，但文件也越大。关键是把像素用在刀刃上（重要区域）
+  tips:
+    beginner: 2D问题建议至少50x50，3D问题至少50x50x50。先在关键区域加密
+    intermediate: 在梯度大的区域（壁面、尾流）局部加密，可使用渐变网格（grading）节省单元数
+    advanced: 进行网格无关性验证：用3套不同密度网格计算，确认结果差异<5%
+
+ny:
+  name: Y方向网格数
+  name_en: Number of Cells in Y
+  symbol: Ny
+  unit: 个
+  description: 计算域在Y方向的网格划分数量
+  typical_range:
+    粗网格: 20-50
+    中等网格: 50-200
+    精细网格: 200-1000
+    DNS/LES: 1000+
+  why_matters: 与nx共同决定网格分辨率。对于边界层流动，壁面法向（通常是Y向）需要特别加密
+  analogy: 同nx，是网格的另一个维度
+  tips:
+    beginner: 通常与nx数量级相同，但在有边界层的方向需要更多网格
+    intermediate: 壁面法向第一层网格高度由y+决定，湍流模拟中至关重要
+    advanced: 考虑使用非结构化网格或O型网格处理复杂几何边界层
+
+nz:
+  name: Z方向网格数
+  name_en: Number of Cells in Z
+  symbol: Nz
+  unit: 个
+  description: 计算域在Z方向的网格划分数量（仅3D问题）
+  typical_range:
+    2D问题: 1
+    3D粗网格: 20-50
+    3D中等网格: 50-200
+    3D精细网格: 200+
+  why_matters: 3D问题中决定第三维度的分辨率。对于展向均匀流动，可用较少网格
+  analogy: 就像立体照片的厚度维度
+  tips:
+    beginner: 2D问题设为1。3D问题根据几何复杂度决定，简单流动可相对稀疏
+    intermediate: 对于展向周期性边界，确保网格足够捕捉展向不稳定性
+    advanced: 利用对称性减少计算域时，注意对称边界对流动的影响
+
+L:
+  name: 特征长度
+  name_en: Characteristic Length
+  symbol: L
+  unit: m
+  description: 定义计算域在X方向的长度，或作为无量纲化的特征尺度
+  typical_range:
+    小尺度: 0.001-0.01
+    实验室尺度: 0.01-1.0
+    工程尺度: 1.0-100
+    环境尺度: 100+
+  why_matters: 特征长度用于定义计算域大小和计算雷诺数。对于圆柱绕流是直径，对于平板是长度
+  analogy: 就像舞台的大小——必须足够容纳整个表演，但也不能太大让演员显得渺小
+  tips:
+    beginner: 根据实际几何尺寸设定。外流问题出口边界建议距离物体5-10倍特征长度
+    intermediate: 注意入口和出口边界的距离，避免边界反射影响结果
+    advanced: 可使用非维数化计算，设L=1，其他量相应缩放，便于参数研究
+
+W:
+  name: 宽度
+  name_en: Width
+  symbol: W
+  unit: m
+  description: 计算域在Y方向的宽度
+  typical_range:
+    根据具体问题: 视几何而定
+  why_matters: 对于槽道流是槽道高度，对于圆柱绕流是横向域宽（影响阻塞率）
+  analogy: 就像房间的宽度
+  tips:
+    beginner: 对于外流问题，侧边界距离物体至少5倍特征长度，避免阻塞效应
+    intermediate: 阻塞率（物体截面积/域截面积）应<5%，否则结果受壁面影响
+    advanced: 可使用壁面函数或对称边界模拟无限域，减少计算量
+
+H:
+  name: 高度
+  name_en: Height
+  symbol: H
+  unit: m
+  description: 计算域在Z方向的高度（3D问题）
+  typical_range:
+    2D问题: 不适用
+    薄层3D: 0.001-0.01
+    一般3D: 0.1-10
+  why_matters: 3D问题中决定计算域的第三维度尺寸
+  analogy: 就像房间的高度
+  tips:
+    beginner: 对于2D问题忽略此参数。3D问题根据实际几何设定
+    intermediate: 对于展向均匀流动，可设较小高度配合周期性边界
+    advanced: 考虑使用2D假设验证流动确实展向均匀，再决定是否进行3D计算
+
+Reynolds_number:
+  name: 雷诺数
+  name_en: Reynolds Number
+  symbol: Re
+  unit: 无量纲
+  description: 惯性力与粘性力之比，表征流动状态的最重要无量纲数
+  typical_range:
+    层流: "< 2300（管流）"
+    转捩: 2300-4000
+    湍流: "> 4000"
+    高雷诺数: "> 1e5"
+  why_matters: 决定流动是层流还是湍流，是CFD中最关键的相似准则。相同Re的流动具有相似特征
+  analogy: 就像搅拌液体的快慢——慢慢搅是层流（顺滑有序），快速搅是湍流（混乱涡旋）
+  tips:
+    beginner: Re = 速度×特征长度/粘度。水管中Re<2300是层流，>4000是湍流
+    intermediate: 临界Re因几何而异：平板约5e5，圆柱约47，管流约2300
+    advanced: 高Re模拟需要湍流模型和壁面函数，或进行DNS/LES直接模拟
+
+Courant_number:
+  name: 库朗数
+  name_en: Courant Number
+  symbol: Co
+  unit: 无量纲
+  description: 时间步长内流体移动距离与网格尺寸的比值，表征时间离化的稳定性
+  typical_range:
+    显式格式: "< 0.5-1.0"
+    隐式格式: "< 5-10"
+    稳定: "< 1"
+    可接受: 1-5
+  why_matters: 瞬态计算稳定性的关键判据。Co>1时信息传播超过一个网格，显式格式会发散
+  analogy: 就像跨步跑步——步子太大（Co>1）会踩空，步子合适才能稳步前进
+  tips:
+    beginner: 确保Co<1，越小越稳定。可在controlDict中设置可调时间步（adjustTimeStep）
+    intermediate: 隐式格式可容忍Co>1，但精度会下降。建议监控最大Co和平均Co
+    advanced: 局部Co可能在高速区很大，可局部加密网格或减小时间步
+
+tolerance:
+  name: 收敛容差
+  name_en: Convergence Tolerance
+  symbol: "ε"
+  unit: 无量纲
+  description: 迭代求解停止的残差阈值，表示方程求解的精度要求
+  typical_range:
+    宽松: 1e-3
+    一般: 1e-6
+    严格: 1e-8
+    极严格: 1e-10
+  why_matters: 决定计算何时停止。太松结果不准，太严计算浪费。通常1e-6是良好平衡
+  analogy: 就像称重的精度——买菜可能精确到克就够了，但珠宝需要精确到毫克
+  tips:
+    beginner: 使用默认值1e-6即可。如果收敛慢，可放宽到1e-5
+    intermediate: 不同方程可设不同容差：压力通常1e-6，速度可稍松，湍流变量可更松
+    advanced: 除残差外，还应监控物理量（力、流量）是否稳定作为收敛判据
+
+relaxation_factor:
+  name: 松弛因子
+  name_en: Relaxation Factor
+  symbol: "α"
+  unit: 无量纲
+  description: 稳态计算中新旧解的加权系数，控制迭代更新的幅度
+  typical_range:
+    欠松弛: 0.1-0.5
+    正常: 0.5-0.9
+    无松弛: 1.0
+  why_matters: 提高稳态计算稳定性。小值稳定但收敛慢，大值快但可能发散。压力通常0.3，速度0.7
+  analogy: 就像开车转弯——方向盘打太大（α=1）会失控，慢慢调整（α<1）才能平稳过弯
+  tips:
+    beginner: 压力用0.3，速度用0.7。如果发散，减小压力松弛因子到0.1-0.2
+    intermediate: 复杂流动可先用小松弛因子稳定，收敛后逐渐增大加速
+    advanced: 可使用自适应松弛或伪瞬态方法提高收敛性
+
+boundary_type_velocity:
+  name: 速度边界类型
+  name_en: Velocity Boundary Type
+  symbol: U BC
+  unit: N/A
+  description: 定义边界上的速度条件类型
+  typical_range:
+    入口: "fixedValue, flowRateInletVelocity"
+    出口: "zeroGradient, inletOutlet"
+    壁面: "noSlip, slip, movingWallVelocity"
+    对称: symmetry
+  why_matters: 正确设置边界条件是获得准确结果的前提。入口定义来流，壁面无滑移是最常见设置
+  analogy: 就像水管系统的接口——入口是水龙头（固定流速），出口是开放的（自由流出），管壁是固定的（无滑移）
+  tips:
+    beginner: 入口用fixedValue设速度，壁面用noSlip，出口用zeroGradient
+    intermediate: 出口有回流时用inletOutlet，需要指定流量时用flowRateInletVelocity
+    advanced: 周期性边界用cyclic，多孔介质用porousBaffle，复杂情况可用codedFixedValue
+
+boundary_type_pressure:
+  name: 压力边界类型
+  name_en: Pressure Boundary Type
+  symbol: p BC
+  unit: N/A
+  description: 定义边界上的压力条件类型
+  typical_range:
+    入口: "zeroGradient, fixedFluxPressure"
+    出口: "fixedValue, outletInlet"
+    壁面: zeroGradient
+    远场: freestreamPressure
+  why_matters: 压力边界与速度边界需匹配。出口通常固定压力，入口固定速度时压力为零梯度
+  analogy: 就像房间的气压——开窗（出口）通大气（固定压力），关窗（壁面）气压不变（零梯度）
+  tips:
+    beginner: 入口用zeroGradient，出口用fixedValue=0（表压），壁面用zeroGradient
+    intermediate: 同时指定速度和压力时确保兼容，避免过约束或欠约束
+    advanced: 可出口用meanVelocityForce驱动流动，避免入口压力不确定
+
+yplus:
+  name: "y+ (无量纲壁面距离)"
+  name_en: "y-plus (Dimensionless Wall Distance)"
+  symbol: "y+"
+  unit: 无量纲
+  description: "衡量壁面附近第一层网格是否足够精细的无量纲指标，定义为y+ = u_τ * y / ν，其中u_τ是摩擦速度，y是第一层网格高度，ν是运动粘度"
+  beginner:
+    description: "y+是衡量壁面附近第一层网格是否足够精细的指标。就像用放大镜观察边界层——放大倍数合适才能看清细节，太大或太小都不行。"
+    analogy: "就像用显微镜观察细胞——倍数太低看不清结构，倍数太高反而看不到全貌。y+就是CFD中的'放大倍数'。"
+    tips: 
+      - "y+ < 5: 第一层网格在粘性底层内，可以解析边界层（低Re模型）"
+      - "30 < y+ < 300: 第一层网格在对数律区域，使用壁面函数（高Re模型）"
+      - "5 < y+ < 30: 缓冲层，应避免此范围"
+  intermediate:
+    description: "y+ = u_τ * y / ν，其中u_τ是摩擦速度（√(τ_w/ρ)），y是第一层网格高度，ν是运动粘度。它直接决定壁面函数的适用性和边界层解析精度。"
+    key_points:
+      - "k-omega SST模型: 建议y+≈1，可自动适应但低y+精度更高"
+      - "k-epsilon模型: 必须使用壁面函数，要求30<y+<300"
+      - "LES/DNS: 要求y+<2，需要极精细的壁面网格"
+    estimation: "可用经验公式估算：y+ ≈ 0.17 * y * Re^0.9 / L（湍流平板）"
+  advanced:
+    description: "y+直接决定壁面函数的适用性。基于Schlichting边界层理论，湍流平板摩擦系数Cf≈0.058*Re^(-0.2)，壁面剪切应力τ_w=0.5*Cf*ρ*U²，摩擦速度u_τ=√(τ_w/ρ)。"
+    wall_function_mapping:
+      high_Re: "kqRWallFunction, nutkWallFunction, epsilonWallFunction - 要求30<y+<300"
+      low_Re: "nutLowReWallFunction - 要求y+<5"
+      adaptive: "nutUSpaldingWallFunction, kOmegaSST - 可适应全范围但y+≈1精度最高"
+    best_practices:
+      - "进行网格无关性验证时，应检查y+对结果的影响"
+      - "壁面剪切力和热传递系数对y+非常敏感"
+      - "非结构化网格中应监控最大和平均y+"
+  range: "取决于湍流模型：k-omega SST建议y+≈1，k-epsilon建议30<y+<300，LES建议y+<2"
+  typical_values:
+    kOmegaSST_optimal: 1.0
+    kEpsilon_min: 30
+    kEpsilon_max: 300
+    LES_max: 2.0
+    buffer_layer_min: 5
+    buffer_layer_max: 30
+  why_matters: "y+决定壁面附近流动的计算方式。错误的y+会导致壁面剪切力、热传递和分离点预测严重偏差。"
+  common_mistakes:
+    - "在缓冲层(5<y+<30)使用壁面函数"
+    - "k-epsilon模型使用y+≈1的网格（应使用低Re模型）"
+    - "忽略y+随流动位置的变化"
+    - "仅检查平均y+而忽略局部最大值"
+
+first_cell_height:
+  name: "第一层网格高度"
+  name_en: "First Cell Height"
+  symbol: "y_1"
+  unit: m
+  description: "壁面附近第一层网格的高度，直接决定y+值，是湍流模拟中最重要的网格参数之一"
+  beginner:
+    description: "壁面附近第一层网格的高度。就像贴墙纸时第一张贴的位置——决定了整个边界层的网格质量。"
+    tips:
+      - "目标y+=1时，通常需要非常薄的网格（微米级）"
+      - "使用壁面函数时，第一层可以较厚（毫米到厘米级）"
+      - "不确定时宁可太细不要太粗"
+  intermediate:
+    description: "基于目标y+反算：y_1 = y+ * ν / u_τ。其中u_τ可通过经验公式估算：u_τ ≈ U * √(Cf/2)，Cf≈0.058*Re^(-0.2)"
+    calculation_steps:
+      - "1. 确定目标y+（根据湍流模型）"
+      - "2. 估算摩擦系数Cf = 0.058 * Re^(-0.2)"
+      - "3. 计算摩擦速度u_τ = U * √(Cf/2)"
+      - "4. 反算y_1 = y+ * ν / u_τ"
+  advanced:
+    description: "精确计算需要考虑压力梯度、表面粗糙度和流动分离。对于复杂几何，建议使用OpenFOAM的yPlusRAS或yPlusLES工具后处理验证。"
+    refinement_strategy:
+      - "在曲率大的区域局部加密"
+      - "流动分离点前加密"
+      - "使用各向异性网格（边界层内长宽比可达100:1）"
+  typical_range:
+    low_Re_model: "1e-6 to 1e-4 m (微米到百微米级)"
+    high_Re_model: "1e-4 to 1e-2 m (百微米到厘米级)"
+  why_matters: "第一层网格高度直接决定y+，进而影响壁面剪切力、热传递系数和分离点预测的准确性"
+
+expansion_ratio:
+  name: "网格膨胀比"
+  name_en: "Mesh Expansion Ratio"
+  symbol: "r"
+  unit: 无量纲
+  description: "边界层内相邻两层网格高度的比值，通常1.1-1.3，影响边界层内网格的平滑过渡"
+  beginner:
+    description: "边界层内网格从壁面到外流逐渐变大的比例。就像楼梯的台阶高度逐渐增大——变化太陡会摔跤，变化太平缓则台阶太多。"
+    tips:
+      - "推荐值：1.1-1.3"
+      - "大于1.5可能导致数值不稳定"
+      - "低Re模型需要更平缓的过渡（1.1-1.2）"
+  intermediate:
+    description: "几何级数增长：h_n = h_1 * r^(n-1)。总边界层厚度δ = h_1 * (r^n - 1)/(r - 1)。需要在层数和过渡平滑性之间平衡。"
+    recommended_values:
+      kOmegaSST: "1.1-1.2 (需要更平滑过渡)"
+      kEpsilon: "1.2-1.3 (可以使用稍大比例)"
+      LES: "1.05-1.15 (需要非常精细的过渡)"
+  advanced:
+    description: "膨胀比影响边界层内数值扩散和梯度计算精度。过大的膨胀比会导致壁面附近梯度计算误差增大，影响壁面通量计算。"
+    optimization: "可使用非均匀膨胀比（如从壁面开始1.1，逐渐增大到1.3）以在有限层数内覆盖更大范围"
+  typical_range: "1.1 to 1.5 (推荐1.1-1.3)"
+  why_matters: "膨胀比决定边界层内网格的平滑过渡程度。过大的膨胀比会导致数值误差，过小则需要过多层数"
+
+boundary_layer_layers:
+  name: "边界层网格层数"
+  name_en: "Boundary Layer Mesh Layers"
+  symbol: "n_BL"
+  unit: 层
+  description: "边界层膨胀区域内的网格层数，通常10-20层，需要足够覆盖边界层厚度"
+  beginner:
+    description: "边界层内有多少层网格。就像千层蛋糕的层数——层数太少蛋糕会塌，层数太多制作麻烦。"
+    tips:
+      - "推荐至少10-15层"
+      - "需要覆盖边界层厚度的80%以上"
+      - "层数越多计算越慢"
+  intermediate:
+    description: "层数由总边界层厚度、第一层高度和膨胀比共同决定：n = ln(δ*(r-1)/h_1 + 1) / ln(r)。湍流边界层厚度可估算为δ ≈ 0.37*L*Re^(-0.2)"
+    guidelines:
+      - "k-omega SST: 10-15层（y+≈1时）"
+      - "k-epsilon: 5-10层（使用壁面函数时）"
+      - "LES: 15-30层（需要解析边界层）"
+  advanced:
+    description: "层数选择需要在计算成本和精度之间权衡。对于复杂流动（分离、再附着），建议在关键区域局部增加层数。"
+    best_practices:
+      - "进行网格无关性验证"
+      - "监控y+分布确保一致性"
+      - "在分离和再附着区域加密"
+  typical_range: "5 to 30 (推荐10-20)"
+  why_matters: "足够的层数确保边界层被充分解析，层数不足会导致边界层内速度梯度计算误差，影响壁面剪切力和热传递"
+
+# ============================================================
+# 守恒性检查相关参数
+# ============================================================
+
+continuity_error:
+  name: 连续性误差
+  name_en: Continuity Error
+  symbol: "ε_cont"
+  unit: "1/s 或无量纲"
+  description: 流体质量守恒方程的残差，衡量速度场是否满足连续性方程。计算过程中OpenFOAM会报告local和global连续性误差
+  typical_range:
+    良好收敛: "< 1e-6"
+    可接受: "1e-6 to 1e-4"
+    需要关注: "1e-4 to 1e-2"
+    发散风险: "> 1e-2"
+  why_matters: 连续性误差反映质量守恒的满足程度。过大的连续性误差意味着速度场不满足质量守恒，结果不可信
+  analogy: 就像账本的收支平衡——进出口流量应该相等（稳态）或符合物理规律变化（瞬态），差额太大说明账目有误
+  tips:
+    beginner: 运行时注意观察log文件中的"continuity error"，良好情况应<1e-6
+    intermediate: 连续性误差不收敛可能是网格质量差、边界条件不合理或时间步过大的信号
+    advanced: 对于复杂多相流或压缩流，可能需要更严格的压力求解器设置（如GAMG预处理器）
+
+mass_flux_balance:
+  name: 质量通量平衡
+  name_en: Mass Flux Balance
+  symbol: "Δṁ"
+  unit: kg/s
+  description: 进出口质量流量的差值，衡量计算域整体的质量守恒。稳态问题应趋近于零
+  typical_range:
+    完美平衡: "< 0.1%"
+    可接受: "0.1% to 1%"
+    需要检查: "> 1%"
+  why_matters: 质量通量不平衡意味着计算域内"凭空"产生或消失了质量，物理上不可接受
+  analogy: 就像水管系统——进水量应该等于出水量（假设没有漏水），差异太大说明系统模型有问题
+  tips:
+    beginner: 使用functionObject在运行时或后处理时检查各边界的流量
+    intermediate: 质量不平衡可能来自数值误差、未正确设置的边界条件，或网格非守恒问题
+    advanced: 对于多相流，需分别检查每一相的质量守恒
+
+energy_balance:
+  name: 能量平衡
+  name_en: Energy Balance
+  symbol: "ΔQ"
+  unit: W
+  description: 传热问题中进出口热量与热源/汇的平衡检查。稳态问题中，进入热量应等于流出热量（无热源时）
+  typical_range:
+    良好平衡: "< 0.1%"
+    可接受: "0.1% to 1%"
+    需要关注: "> 1%"
+  why_matters: 能量不平衡表明传热计算违反热力学第一定律，结果物理上不合理
+  analogy: 就像房间的空调能耗——进入房间的热量（阳光、设备）应该等于空调带走的热量，否则温度会持续变化
+  tips:
+    beginner: 传热问题完成后，使用functionObject计算各边界的热通量进行验证
+    intermediate: 注意区分对流热通量和传导热通量，壁面热边界条件类型影响热量统计
+    advanced: 对于共轭传热（流固耦合），需要在流体域和固体域分别检查能量平衡
+
+# ============================================================
+# 数值格式相关参数
+# ============================================================
+
+convection_scheme:
+  name: 对流离散格式
+  name_en: Convection Discretization Scheme
+  symbol: "div(phi, U)"
+  unit: N/A
+  description: 对流项的离散方法，决定速度、标量等场变量随流体输运时的数值精度和稳定性
+  typical_range:
+    一阶格式: "upwind (耗散大，稳定)"
+    二阶格式: "linearUpwind (精度高，推荐)"
+    TVD格式: "vanLeer, limitedLinear (有界，适合多相流)"
+    高精度格式: "LUST, cubic (LES/DNS用)"
+  why_matters: 对流格式直接决定数值扩散和计算稳定性。一阶格式过于耗散会抹掉物理细节，高阶格式可能振荡
+  analogy: 就像摄影的镜头——廉价镜头（一阶）拍出的照片模糊，专业镜头（高阶）细节清晰但更难对焦
+  common_schemes:
+    upwind: "一阶迎风，最稳定但精度低，仅用于初始化"
+    linearUpwind: "二阶迎风，日常RANS计算推荐"
+    vanLeer: "TVD格式，有界，适合多相流界面"
+    LUST: "线性/迎风混合，LES推荐"
+    linear: "中心差分，二阶无耗散但可能振荡"
+  tips:
+    beginner: 使用linearUpwind Gauss grad(U)作为速度对流格式，稳定且精度够用
+    intermediate: 多相流使用vanLeer等有界格式，发散时可临时切换upwind稳定后再提升精度
+    advanced: LES使用LUST或blended格式在精度和稳定性间平衡，DNS使用高阶紧致格式
+
+gradient_scheme:
+  name: 梯度离散格式
+  name_en: Gradient Discretization Scheme
+  symbol: "grad(U)"
+  unit: N/A
+  description: 计算场变量梯度的离散方法，影响扩散项、源项和对流格式的重构精度
+  typical_range:
+    标准格式: "Gauss linear (线性，常用)"
+    限制格式: "cellLimited Gauss linear (有界)"
+    最小二乘: "leastSquares (非结构网格精度高)"
+  why_matters: 梯度计算影响几乎所有方程的离散。非结构化网格或高长宽比网格上需要特别注意
+  analogy: 就像测量坡度——不同的测量方法（看远一点还是近一点）得到的坡度值略有差异
+  tips:
+    beginner: 使用"Gauss linear"即可，这是最常用的标准格式
+    intermediate: 网格质量差时使用"cellLimited Gauss linear 1"限制梯度，提高稳定性
+    advanced: 非结构化网格上leastSquares可能更准确，但计算量稍大
+
+laplacian_scheme:
+  name: 扩散项离散格式
+  name_en: Laplacian Discretization Scheme
+  symbol: "laplacian(nu, U)"
+  unit: N/A
+  description: 扩散项（如粘性项、热传导项）的离散方法，决定分子扩散的数值精度
+  typical_range:
+    标准格式: "Gauss linear corrected (正交校正)"
+    有限校正: "Gauss linear limited corrected 0.5"
+    无校正: "Gauss linear uncorrected (仅正交网格)"
+  why_matters: 扩散项离散影响壁面边界层、热传导等物理过程的模拟精度
+  analogy: 就像热传导计算——需要准确计算热量如何从高温区扩散到低温区
+  tips:
+    beginner: 使用"Gauss linear corrected"，适用于大多数情况
+    intermediate: 网格非正交性高时（>70°），使用limited或增加非正交校正次数
+    advanced: 对于边界层传热问题，扩散项格式对Nu数预测影响显著，需仔细验证
+
+interpolation_scheme:
+  name: 插值格式
+  name_en: Interpolation Scheme
+  symbol: "interpolate(U)"
+  unit: N/A
+  description: 将网格单元中心量插值到面心的方法，影响通量计算的精度
+  typical_range:
+    线性插值: "linear (二阶，标准)"
+    限制插值: "limitedLinear (有界)"
+    上风插值: "upwind (一阶)"
+  why_matters: 插值精度影响面通量计算，进而影响对流和扩散项的离散精度
+  tips:
+    beginner: 使用"linear"即可
+    intermediate: 对于标量输运（温度、浓度），可根据需要使用limitedLinear确保有界性
+    advanced: 某些情况下插值格式与对流格式需要匹配以保证守恒性

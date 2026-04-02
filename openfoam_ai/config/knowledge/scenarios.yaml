@@ -1,0 +1,605 @@
+# CFD场景知识库
+# 包含仿真场景的详细说明、物理背景、设置建议和最佳实践
+
+# 场景知识 - 用于teaching_engine
+cenarios_knowledge:
+  cavity:
+    name: 顶盖驱动腔
+    name_en: Lid-Driven Cavity
+    description: 一个方腔，顶盖以恒定速度移动，驱动腔内流体流动
+    physics: |
+      这是CFD最经典的基准测试案例之一。顶盖移动产生剪切力，
+      驱动腔内形成主涡和可能的角涡。
+
+      流动特征：
+      • 雷诺数 Re = U_lid × L / ν
+      • 低Re：单一主涡，层流
+      • 中Re：主涡+角涡
+      • 高Re：湍流，复杂涡结构
+
+      关键现象：
+      • 主涡中心位置随Re变化
+      • 角涡在Re>1000时出现
+      • 高Re时涡中心向下游移动
+    setup: |
+      几何设置：
+      • 2D方腔，边长L
+      • 顶盖：移动壁面，速度U_lid
+      • 其他壁面：静止无滑移
+
+      边界条件：
+      • 顶盖：fixedValue (U_lid 0 0)
+      • 其他壁面：noSlip (0 0 0)
+      • 压力：所有边界zeroGradient
+
+      建议参数：
+      • Re=100：层流，基准验证
+      • Re=1000：开始出现角涡
+      • Re=10000：湍流转捩
+    tips: 适合初学者入门，几何简单，结果易于验证。注意顶盖角落是奇点（压力奇异）。
+
+  pipe:
+    name: 管道流动
+    name_en: Pipe Flow
+    description: 流体在圆管或方管内的流动，研究压降和摩擦阻力
+    physics: |
+      管道流动是工程中最常见的内部流动问题。
+
+      流动状态：
+      • Re < 2300：层流，抛物线速度剖面
+      • Re > 4000：湍流，更饱满的速度剖面
+      • 2300 < Re < 4000：转捩区，不稳定
+
+      关键参数：
+      • 达西摩擦因子 f
+      • 压降 Δp = f × (L/D) × (ρU²/2)
+      • 充分发展长度：层流~0.05Re×D，湍流~50D
+    setup: |
+      几何设置：
+      • 圆管/方管，长度>充分发展长度
+      • 入口：速度入口或压力入口
+      • 出口：压力出口
+
+      边界条件：
+      • 入口：充分发展剖面或均匀速度
+      • 出口：fixedValue p=0
+      • 壁面：noSlip
+
+      建议参数：
+      • 层流验证：Re=100
+      • 湍流测试：Re=10000，用k-omega SST
+    tips: 入口需留充分发展段，或用映射边界（cyclic）模拟无限长管。
+
+  cylinder:
+    name: 圆柱绕流
+    name_en: Flow over Cylinder
+    description: 流体绕过圆柱体，研究涡脱落和卡门涡街
+    physics: |
+      圆柱绕流展示了丰富的流动现象，是外流问题的经典案例。
+
+      流动状态：
+      • Re < 5：无分离，附着流
+      • 5 < Re < 47：稳定分离，对称涡对
+      • 47 < Re < 200：周期性涡脱落（卡门涡街）
+      • Re > 200：三维效应，湍流尾流
+
+      关键参数：
+      • 斯特劳哈尔数 St = f×D/U ≈ 0.2
+      • 阻力系数 Cd ≈ 1.0-1.2（亚临界）
+      • 升力系数 Cl 振荡幅值
+    setup: |
+      几何设置：
+      • 圆柱直径D，计算域10D×20D
+      • 入口距圆柱5-10D
+      • 出口距圆柱15-20D
+
+      边界条件：
+      • 入口：uniform (U_inf 0 0)
+      • 出口：zeroGradient或inletOutlet
+      • 圆柱壁面：noSlip
+      • 上下边界：symmetry或slip
+
+      建议参数：
+      • Re=100：层流涡脱落
+      • Re=1000：周期性湍流
+      • St≈0.2，验证涡脱落频率
+    tips: 瞬态模拟，注意时间步要足够小以捕捉涡脱落（每个周期至少20步）。
+
+  backward_step:
+    name: 后向台阶
+    name_en: Backward-Facing Step
+    description: 通道中的突然扩张，研究流动分离和再附
+    physics: |
+      后向台阶是研究分离流动的标准案例。流动在台阶处分离，
+      形成回流区，之后重新附着。
+
+      关键现象：
+      • 分离点：固定在台阶角
+      • 再附点位置：随Re变化
+      • 回流区长度：x_r/h ≈ 0.05Re（层流）
+
+      流动状态：
+      • 低Re：层流，长回流区
+      • 中Re：转捩，回流区不稳定
+      • 高Re：湍流，短回流区
+    setup: |
+      几何设置：
+      • 入口高度h，扩张比1:1.2或1:2
+      • 入口段长度>10h（充分发展）
+      • 出口段长度>50h（捕捉再附）
+
+      边界条件：
+      • 入口：充分发展剖面
+      • 出口：fixedValue p=0
+      • 壁面：noSlip
+
+      建议参数：
+      • Re=100-800：层流验证
+      • 对比再附点位置与文献
+    tips: 入口需充分发展流，可用周期性边界先计算充分发展剖面。
+
+  channel:
+    name: 槽道流动
+    name_en: Channel Flow
+    description: 两平行平板间的流动，研究壁面湍流
+    physics: |
+      槽道流动是研究壁面湍流的理想化模型。
+
+      特征：
+      • 充分发展：速度剖面沿流向不变
+      • 对称性：中心线对称
+      • 壁面律：近壁区遵循对数律
+
+      关键参数：
+      • 摩擦雷诺数 Re_tau = u_tau × h / ν
+      • 摩擦速度 u_tau = sqrt(tau_w/ρ)
+      • 中心线速度 U_cl
+    setup: |
+      几何设置：
+      • 半高h（全高2h），展向宽度>πh
+      • 流向长度>10h（统计平均）
+      • 2D可近似，3D更准确
+
+      边界条件：
+      • 入口/出口：cyclic周期性
+      • 壁面：noSlip
+      • 中心线：symmetry（半高模拟）
+
+      建议参数：
+      • Re_tau=180：DNS/LES基准
+      • Re_tau=590：高Re湍流
+    tips: 用周期性边界模拟无限长槽道，驱动流可用meanVelocityForce或固定压差。
+
+  natural_convection:
+    name: 自然对流
+    name_en: Natural Convection
+    description: 由浮力驱动的流动，如热空气上升
+    physics: |
+      自然对流由温度差引起的密度差（浮力）驱动，无外加流动。
+
+      控制参数：
+      • 瑞利数 Ra = gβΔT L³/(να)
+      • 普朗特数 Pr = ν/α
+      • Grashof数 Gr = Ra/Pr
+
+      流动状态：
+      • Ra < 1e8：层流
+      • Ra > 1e10：湍流
+      • 边界层在热壁面附近
+    setup: |
+      求解器：buoyantBoussinesqPimpleFoam
+
+      边界条件：
+      • 热壁面：fixedTemperature
+      • 冷壁面：fixedTemperature
+      • 其他：zeroGradient或symmetry
+
+      物性设置：
+      • 启用Boussinesq近似
+      • 设置热膨胀系数beta
+      • 设置普朗特数Pr
+    tips: 确保重力方向正确，Boussinesq近似适用于小温差。大温差需用完全可压求解器。
+
+  dam_break:
+    name: 溃坝问题
+    name_en: Dam Break
+    description: 水坝突然破裂，水体坍塌流动
+    physics: |
+      溃坝是经典的多相流问题，涉及自由表面大变形。
+
+      特征：
+      • 初始：水柱静止，空气充满其余空间
+      • 溃坝后：水沿地面铺展，可能冲击障碍物
+      • 非定常：界面位置随时间变化
+
+      关键参数：
+      • 水柱高宽比
+      • 弗劳德数 Fr = U/sqrt(gH)
+      • 冲击压力
+    setup: |
+      求解器：interFoam
+
+      边界条件：
+      • 壁面：noSlip或slip（取决于问题）
+      • 顶部：atmosphere（压力出口）
+      • 其他：zeroGradient
+
+      初始条件：
+      • setFields或funkySetFields设定初始水柱
+      • alpha.water=1为水，=0为空气
+    tips: 时间步要小（Co<0.5），界面重构和压缩很重要。可对比SPH或实验结果。
+
+  airfoil:
+    name: 翼型绕流
+    name_en: Airfoil Flow
+    description: 流体绕过机翼型面，研究升阻力特性
+    physics: |
+      翼型绕流是航空航天的核心问题。
+
+      关键参数：
+      • 攻角 α
+      • 升力系数 Cl = L/(0.5ρU²c)
+      • 阻力系数 Cd = D/(0.5ρU²c)
+      • 升阻比 L/D
+
+      流动现象：
+      • 附着流：小攻角，高升阻比
+      • 分离：大攻角，失速
+      • 层流分离泡：低Re时
+    setup: |
+      几何设置：
+      • C型或O型计算域
+      • 远场边界>20倍弦长
+      • 翼面附近加密
+
+      边界条件：
+      • 远场：freestreamVelocity/freestreamPressure
+      • 翼面：noSlip
+      • 可用cyclic模拟翼栅
+
+      湍流模型：
+      • 低Re：转捩模型或DNS
+      • 高Re：k-omega SST（推荐）
+    tips: 注意y+要求，高Re需壁面函数。大攻角分离难收敛，可用pimpleFoam瞬态计算。
+
+# 场景模板 - 用于wizard_engine
+scenario_templates:
+  cavity:
+    id: cavity
+    name: 方腔驱动流
+    name_en: Lid-Driven Cavity Flow
+    description: 经典的方腔驱动流问题，顶部壁面以恒定速度运动，其他壁面固定。
+    icon: "🔲"
+    difficulty: beginner
+    physics_type: incompressible
+    recommended_solver: icoFoam
+    default_geometry:
+      L: 1.0
+      W: 1.0
+      H: 0.1
+    default_mesh:
+      nx: 40
+      ny: 40
+      nz: 1
+    default_boundary:
+      movingWall:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 顶部运动壁面
+      fixedWalls:
+        type: noSlip
+        description: 固定壁面
+      frontAndBack:
+        type: empty
+        description: 前后空边界（2D）
+    default_nu: 0.01
+    default_endTime: 0.5
+    default_deltaT: 0.005
+    key_parameters:
+      - 顶部壁面速度
+      - 运动粘度
+    teaching_notes:
+      what: 方腔驱动流是CFD的经典验证算例，研究封闭方腔内由顶部运动壁面驱动的流动。
+      why: 适合初学者入门，几何简单，边界条件明确，有解析解可对比。
+      tips: 注意雷诺数不要太高（Re<10000），否则会出现湍流；网格建议在中心区域加密。
+
+  pipe:
+    id: pipe
+    name: 管道流
+    name_en: Pipe Flow
+    description: 圆管或方管内的流动，适用于研究泊肃叶流、湍流过渡等问题。
+    icon: "🚰"
+    difficulty: beginner
+    physics_type: incompressible
+    recommended_solver: simpleFoam
+    default_geometry:
+      L: 5.0
+      W: 0.5
+      H: 0.5
+    default_mesh:
+      nx: 100
+      ny: 30
+      nz: 30
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 入口速度
+      outlet:
+        type: zeroGradient
+        description: 出口零梯度
+      walls:
+        type: noSlip
+        description: 管壁无滑移
+    default_nu: 1.0e-05
+    default_endTime: 1000
+    default_deltaT: 1.0
+    key_parameters:
+      - 入口速度
+      - 管道直径/宽度
+      - 运动粘度
+    teaching_notes:
+      what: 管道流动是工程和自然界中最常见的流动形式之一。
+      why: 可用于研究层流、湍流过渡，计算压降和摩擦因子。
+      tips: 确保入口段长度足够（>10倍管径）以获得充分发展流动；高雷诺数需要湍流模型。
+
+  cylinder:
+    id: cylinder
+    name: 圆柱绕流
+    name_en: Flow Around Cylinder
+    description: 流体绕过圆柱体的流动，会出现卡门涡街等经典现象。
+    icon: "🔘"
+    difficulty: intermediate
+    physics_type: incompressible
+    recommended_solver: pimpleFoam
+    default_geometry:
+      L: 10.0
+      W: 4.0
+      H: 0.1
+    default_mesh:
+      nx: 100
+      ny: 60
+      nz: 1
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 来流入口
+      outlet:
+        type: zeroGradient
+        description: 出口
+      cylinder:
+        type: noSlip
+        description: 圆柱表面
+      topAndBottom:
+        type: slip
+        description: 上下滑移边界
+      frontAndBack:
+        type: empty
+        description: 前后空边界
+    default_nu: 0.001
+    default_endTime: 10.0
+    default_deltaT: 0.01
+    key_parameters:
+      - 来流速度
+      - 圆柱直径
+      - 运动粘度
+    teaching_notes:
+      what: 圆柱绕流是研究外流和涡脱落的经典问题，会出现著名的卡门涡街现象。
+      why: 可用于研究升阻力特性、斯特劳哈尔数、涡脱落频率等。
+      tips: 雷诺数在40-10000范围内会出现卡门涡街；需要在圆柱表面加密网格以捕捉边界层。
+
+  backward_step:
+    id: backward_step
+    name: 后台阶流
+    name_en: Backward Facing Step
+    description: 流体流过后台阶产生的分离和再附着流动，是验证湍流模型的标准算例。
+    icon: "📐"
+    difficulty: intermediate
+    physics_type: incompressible
+    recommended_solver: simpleFoam
+    default_geometry:
+      L: 10.0
+      W: 1.0
+      H: 0.5
+    default_mesh:
+      nx: 100
+      ny: 40
+      nz: 1
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 入口
+      outlet:
+        type: zeroGradient
+        description: 出口
+      walls:
+        type: noSlip
+        description: 壁面
+      frontAndBack:
+        type: empty
+        description: 前后空边界
+    default_nu: 1.0e-05
+    default_endTime: 1000
+    default_deltaT: 1.0
+    key_parameters:
+      - 入口速度
+      - 台阶高度
+      - 运动粘度
+    teaching_notes:
+      what: 后台阶流是研究流动分离、再附着和回流区的经典算例。
+      why: 可用于验证湍流模型，研究再附着点位置。
+      tips: 再附着点位置对网格分辨率敏感，建议在台阶附近加密网格。
+
+  channel:
+    id: channel
+    name: 平板通道流
+    name_en: Channel Flow
+    description: 两平行平板间的流动，研究壁面湍流和边界层发展的理想模型。
+    icon: "➡️"
+    difficulty: intermediate
+    physics_type: incompressible
+    recommended_solver: simpleFoam
+    default_geometry:
+      L: 10.0
+      W: 2.0
+      H: 0.5
+    default_mesh:
+      nx: 100
+      ny: 40
+      nz: 20
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 入口
+      outlet:
+        type: zeroGradient
+        description: 出口
+      walls:
+        type: noSlip
+        description: 上下壁面
+      sides:
+        type: slip
+        description: 侧边
+    default_nu: 1.0e-05
+    default_endTime: 1000
+    default_deltaT: 1.0
+    key_parameters:
+      - 入口速度
+      - 通道高度
+      - 运动粘度
+    teaching_notes:
+      what: 平板通道流是研究壁面湍流和充分发展流动的标准算例。
+      why: 可用于研究速度分布、壁面剪应力、摩擦因子等。
+      tips: 确保入口段足够长以获得充分发展流动；壁面附近需要足够密的网格以解析边界层。
+
+  natural_convection:
+    id: natural_convection
+    name: 自然对流
+    name_en: Natural Convection
+    description: 由浮力驱动的流动，如热壁面附近的空气流动。
+    icon: "🌡️"
+    difficulty: advanced
+    physics_type: heatTransfer
+    recommended_solver: buoyantBoussinesqPimpleFoam
+    default_geometry:
+      L: 0.5
+      W: 0.5
+      H: 1.0
+    default_mesh:
+      nx: 20
+      ny: 20
+      nz: 40
+    default_boundary:
+      hotWall:
+        type: fixedValue
+        value: 350
+        field: T
+        description: 热壁面
+      coldWall:
+        type: fixedValue
+        value: 300
+        field: T
+        description: 冷壁面
+      adiabaticWalls:
+        type: zeroGradient
+        description: 绝热壁面
+      frontAndBack:
+        type: empty
+        description: 前后空边界
+    default_nu: 1.0e-06
+    default_endTime: 100
+    default_deltaT: 0.1
+    key_parameters:
+      - 热壁面温度
+      - 冷壁面温度
+      - 热膨胀系数
+    teaching_notes:
+      what: 自然对流是由温度差引起的密度差（浮力）驱动的流动。
+      why: 可用于研究建筑通风、电子散热、大气流动等。
+      tips: 确保使用Boussinesq近似；需要同时设置速度和温度边界条件；瑞利数决定流动状态。
+
+  dam_break:
+    id: dam_break
+    name: 溃坝流动
+    name_en: Dam Break
+    description: 模拟水坝突然坍塌后水流的演化，是多相流的经典算例。
+    icon: "🌊"
+    difficulty: advanced
+    physics_type: multiphase
+    recommended_solver: interFoam
+    default_geometry:
+      L: 2.0
+      W: 0.5
+      H: 0.5
+    default_mesh:
+      nx: 80
+      ny: 20
+      nz: 20
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [0, 0, 0]
+        description: 入口（封闭）
+      outlet:
+        type: zeroGradient
+        description: 出口
+      walls:
+        type: noSlip
+        description: 壁面
+      atmosphere:
+        type: fixedValue
+        value: 101325
+        field: p
+        description: 大气边界
+    default_nu: 1.0e-06
+    default_endTime: 1.0
+    default_deltaT: 0.001
+    key_parameters:
+      - 初始水位
+      - 水密度
+      - 空气密度
+    teaching_notes:
+      what: 溃坝流动是多相流（VOF方法）的经典验证算例，模拟水坝突然坍塌后的自由表面流动。
+      why: 可用于验证多相流模型，研究自由表面演化。
+      tips: 时间步长需要很小以保证稳定性；需要设置合适的alpha相分数初始条件。
+
+  custom:
+    id: custom
+    name: 自定义场景
+    name_en: Custom Scenario
+    description: 从头开始配置您的仿真，适用于特殊几何或复杂物理。
+    icon: "⚙️"
+    difficulty: advanced
+    physics_type: incompressible
+    recommended_solver: icoFoam
+    default_geometry:
+      L: 1.0
+      W: 1.0
+      H: 0.1
+    default_mesh:
+      nx: 40
+      ny: 40
+      nz: 1
+    default_boundary:
+      inlet:
+        type: fixedValue
+        value: [1, 0, 0]
+        description: 入口
+      outlet:
+        type: zeroGradient
+        description: 出口
+      walls:
+        type: noSlip
+        description: 壁面
+    default_nu: 0.01
+    default_endTime: 0.5
+    default_deltaT: 0.005
+    key_parameters:
+      - 根据具体问题确定
+    teaching_notes:
+      what: 自定义场景允许您从头配置所有参数，适用于标准模板无法覆盖的情况。
+      why: 提供最大的灵活性，适合有经验的用户。
+      tips: 建议先从一个类似的标准模板开始，然后逐步修改；注意检查物理一致性。

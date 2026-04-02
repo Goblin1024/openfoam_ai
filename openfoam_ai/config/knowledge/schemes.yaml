@@ -1,0 +1,560 @@
+# OpenFOAM 数值离散格式知识库
+# 用于智能推荐格式配置和发散诊断
+
+# ============================================================================
+# 对流项离散格式 (Convection Schemes)
+# ============================================================================
+convection_schemes:
+  upwind:
+    order: 1
+    stability: high
+    accuracy: low
+    bounded: true
+    use_case: "初始化阶段、严重发散时的降级方案"
+    teaching_note: "一阶迎风格式：最稳定但数值耗散大，会抹平流场细节。适用于高对流占优流动或初始化。"
+  
+  linearUpwind:
+    order: 2
+    stability: medium
+    accuracy: medium
+    bounded: false
+    requires: "grad(U)"
+    use_case: "工程计算最常用的二阶格式"
+    teaching_note: "线性迎风格式：兼顾稳定性和精度的工程首选。需要梯度重构，数值耗散比一阶迎风小得多。"
+  
+  linear:
+    order: 2
+    stability: low
+    accuracy: high
+    bounded: false
+    use_case: "低Re层流、高精度要求场景"
+    teaching_note: "中心差分格式：精度最高但无数值耗散，高Re时易产生非物理振荡。适用于低雷诺数或网格足够细的情况。"
+  
+  limitedLinear:
+    order: 2
+    stability: medium_high
+    accuracy: medium_high
+    bounded: true
+    parameter: "1"
+    use_case: "需要稳定性又不想损失太多精度"
+    teaching_note: "有限制器的线性格式：自动在高梯度区域降低精度以保持稳定。参数范围0-1，越大精度越高但稳定性越低。"
+  
+  vanLeer:
+    order: 2
+    stability: medium_high
+    accuracy: medium
+    bounded: true
+    use_case: "多相流界面追踪（alpha方程）"
+    teaching_note: "Van Leer限制器：特别适合相界面的锐利捕捉，是多相流计算的标配格式。"
+  
+  MUSCL:
+    order: 2
+    stability: medium
+    accuracy: medium_high
+    bounded: true
+    use_case: "可压缩流、激波捕捉"
+    teaching_note: "单调上游中心格式：可压缩流计算常用，能较好捕捉激波同时保持单调性。"
+  
+  LUST:
+    order: 2
+    stability: medium
+    accuracy: high
+    bounded: false
+    use_case: "LES大涡模拟"
+    teaching_note: "线性迎风稳定化传输格式：LES计算专用，平衡数值耗散与精度，75%线性+25%线性迎风的混合。"
+  
+  QUICK:
+    order: 2
+    stability: medium
+    accuracy: medium_high
+    bounded: false
+    use_case: "结构化网格高精度要求"
+    teaching_note: "二次上游插值格式：三阶精度，仅适用于结构化网格，非结构化网格不推荐使用。"
+  
+  cubic:
+    order: 3
+    stability: low
+    accuracy: very_high
+    bounded: false
+    use_case: "DNS直接数值模拟"
+    teaching_note: "三阶立方格式：极高精度但稳定性差，仅适用于DNS等极致精度要求的场景。"
+
+# ============================================================================
+# 梯度格式 (Gradient Schemes)
+# ============================================================================
+gradient_schemes:
+  Gauss_linear:
+    accuracy: high
+    stability: medium
+    use_case: "默认梯度格式"
+    teaching_note: "高斯积分配合线性插值：最常用的梯度计算方法，精度高但非正交网格上可能不稳定。"
+  
+  Gauss_cellLimited:
+    accuracy: medium
+    stability: high
+    parameter: "1"
+    use_case: "网格质量差时使用"
+    teaching_note: "单元限制高斯格式：通过限制梯度防止过冲，适用于网格非正交性较大或存在大梯度的情况。"
+  
+  leastSquares:
+    accuracy: high
+    stability: medium
+    use_case: "非结构化网格精度更高"
+    teaching_note: "最小二乘法：对非结构化网格比高斯格式更精确，但计算量稍大。"
+  
+  pointCellsLeastSquares:
+    accuracy: high
+    stability: high
+    use_case: "高度非正交网格"
+    teaching_note: "点单元最小二乘格式：适用于高度非正交网格，能提供更稳定的梯度计算。"
+
+# ============================================================================
+# 拉普拉斯格式 (Laplacian Schemes)
+# ============================================================================
+laplacian_schemes:
+  corrected:
+    accuracy: high
+    stability: medium
+    use_case: "网格正交性好时"
+    teaching_note: "完全修正格式：适用于正交性好的网格，考虑非正交修正，精度最高。"
+  
+  limited:
+    accuracy: medium_high
+    stability: high
+    parameter: "0.5"
+    use_case: "网格非正交性较大时"
+    teaching_note: "限制修正格式：在非正交修正和稳定性之间取平衡。参数范围0-1，0=不修正(稳定)，1=完全修正(精确)。"
+  
+  uncorrected:
+    accuracy: low
+    stability: high
+    use_case: "仅用于正交网格"
+    teaching_note: "不修正格式：忽略非正交项，仅适用于正交网格，否则会有显著误差。"
+  
+  orthogonal:
+    accuracy: medium
+    stability: high
+    use_case: "正交网格快速计算"
+    teaching_note: "正交格式：假设网格正交，计算最快但仅适用于正交性极好的网格。"
+
+# ============================================================================
+# 插值格式 (Interpolation Schemes)
+# ============================================================================
+interpolation_schemes:
+  linear:
+    accuracy: high
+    stability: medium
+    use_case: "默认插值格式"
+    teaching_note: "线性插值：最常用的中心插值方法，精度高但可能产生振荡。"
+  
+  upwind:
+    accuracy: low
+    stability: high
+    use_case: "稳定性优先场景"
+    teaching_note: "迎风插值：一阶精度，稳定性好但数值耗散大。"
+  
+  linearUpwind:
+    accuracy: medium
+    stability: medium_high
+    use_case: "对流占优流动"
+    teaching_note: "线性迎风插值：二阶精度，兼顾精度和稳定性。"
+  
+  pointMVC:
+    accuracy: high
+    stability: medium
+    use_case: "非结构化网格高精度"
+    teaching_note: "多点变分插值：适用于非结构化网格的高精度插值。"
+
+# ============================================================================
+# 法向梯度格式 (snGrad Schemes)
+# ============================================================================
+sngrad_schemes:
+  orthogonal:
+    accuracy: medium
+    stability: high
+    use_case: "正交网格"
+    teaching_note: "正交法向梯度：假设网格正交，计算简单但仅适用于正交性好的网格。"
+  
+  uncorrected:
+    accuracy: low
+    stability: high
+    use_case: "非正交网格快速计算"
+    teaching_note: "不修正法向梯度：忽略非正交贡献，稳定但精度低。"
+  
+  corrected:
+    accuracy: high
+    stability: medium
+    use_case: "非正交网格精确计算"
+    teaching_note: "修正法向梯度：考虑非正交修正，精度高但需要迭代或额外计算。"
+  
+  limited:
+    accuracy: medium_high
+    stability: high
+    parameter: "0.5"
+    use_case: "中度非正交网格"
+    teaching_note: "限制法向梯度：平衡精度和稳定性，适用于中度非正交网格。"
+
+# ============================================================================
+# 时间离散格式 (Time Schemes)
+# ============================================================================
+time_schemes:
+  Euler:
+    order: 1
+    stability: high
+    accuracy: low
+    implicit: true
+    use_case: "默认时间格式，稳定但精度低"
+    teaching_note: "一阶隐式欧拉格式：无条件稳定，但一阶精度，会引入数值耗散。"
+  
+  backward:
+    order: 2
+    stability: medium
+    accuracy: medium
+    implicit: true
+    use_case: "需要时间精度的瞬态计算"
+    teaching_note: "二阶隐式后退欧拉：二阶时间精度，比Euler更精确，稳定性略差。"
+  
+  CrankNicolson:
+    order: 2
+    stability: medium
+    accuracy: high
+    implicit: true
+    parameter: "0.5-1.0"
+    use_case: "高精度瞬态计算"
+    teaching_note: "克兰克-尼科尔森格式：二阶精度且时间可逆，参数1为全CN，0为Euler。需要小时间步保持稳定。"
+  
+  localEuler:
+    order: 1
+    stability: high
+    accuracy: low
+    implicit: true
+    use_case: "局部时间步进稳态加速"
+    teaching_note: "局部欧拉格式：用于稳态计算的局部时间步进加速，每个单元使用不同的时间步。"
+  
+  steadyState:
+    order: 0
+    stability: high
+    accuracy: n_a
+    implicit: true
+    use_case: "仅用于稳态计算"
+    teaching_note: "稳态格式：忽略时间项，仅用于稳态计算。"
+
+# ============================================================================
+# 求解器-格式推荐映射
+# ============================================================================
+solver_scheme_defaults:
+  icoFoam:
+    description: "不可压层流瞬态求解器（PISO算法）"
+    turbulence: laminar
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "层流计算，推荐二阶格式。若发散可降级为upwind初始化。"
+    
+  simpleFoam:
+    description: "不可压稳态求解器（SIMPLE算法）"
+    turbulence: RAS
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,k): "Gauss upwind"
+      div(phi,epsilon): "Gauss upwind"
+      div(phi,omega): "Gauss upwind"
+      div(phi,nuTilda): "Gauss upwind"
+      div((nuEff*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "稳态计算，湍流标量方程推荐upwind保证稳定，速度可用二阶格式。"
+  
+  pimpleFoam:
+    description: "不可压瞬态求解器（PIMPLE算法）"
+    turbulence: RAS
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,k): "Gauss linearUpwind grad(k)"
+      div(phi,epsilon): "Gauss linearUpwind grad(epsilon)"
+      div(phi,omega): "Gauss linearUpwind grad(omega)"
+      div(phi,nuTilda): "Gauss linearUpwind grad(nuTilda)"
+      div((nuEff*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "瞬态计算，所有方程均可使用二阶格式，收敛困难时湍流方程可降级为upwind。"
+  
+  buoyantPimpleFoam:
+    description: "浮力驱动流瞬态求解器"
+    turbulence: RAS
+    heatTransfer: true
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,T): "Gauss linearUpwind grad(T)"
+      div(phi,K): "Gauss linear"
+      div(phi,k): "Gauss upwind"
+      div(phi,epsilon): "Gauss upwind"
+      div(phi,omega): "Gauss upwind"
+      div((nuEff*dev2(T(grad(U))))): "Gauss linear"
+      div(((rho*nuEff)*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear limited corrected 0.5"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "limited 0.5"
+    notes: "传热问题，需考虑浮力效应，拉普拉斯格式推荐limited以防非正交性影响。"
+  
+  interFoam:
+    description: "VOF多相流求解器"
+    turbulence: RAS
+    multiphase: true
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,alpha.water): "Gauss vanLeer"
+      div(phirb,alpha.water): "Gauss linear"
+      div(phi,k): "Gauss upwind"
+      div(phi,epsilon): "Gauss upwind"
+      div(phi,omega): "Gauss upwind"
+      div(((rho*nuEff)*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "多相流计算，alpha方程必须使用vanLeer或其他限制器保持界面锐利。"
+  
+  rhoPimpleFoam:
+    description: "可压缩瞬态求解器"
+    turbulence: RAS
+    compressible: true
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,K): "Gauss linear"
+      div(phi,h): "Gauss linearUpwind grad(h)"
+      div(phi,k): "Gauss upwind"
+      div(phi,epsilon): "Gauss upwind"
+      div((muEff*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "可压缩流，能量方程需要合适的格式，注意马赫数对稳定性的影响。"
+  
+  pisoFoam:
+    description: "不可压层流瞬态求解器（PISO算法）"
+    turbulence: laminar
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "层流PISO求解器，类似icoFoam但支持更多功能。"
+  
+  pimpleDyMFoam:
+    description: "动网格不可压瞬态求解器"
+    turbulence: RAS
+    dynamicMesh: true
+    divSchemes:
+      div(phi,U): "Gauss linearUpwind grad(U)"
+      div(phi,k): "Gauss upwind"
+      div(phi,epsilon): "Gauss upwind"
+      div((nuEff*dev2(T(grad(U))))): "Gauss linear"
+    gradSchemes:
+      default: "Gauss linear"
+    laplacianSchemes:
+      default: "Gauss linear corrected"
+    interpolationSchemes:
+      default: "linear"
+    snGradSchemes:
+      default: "corrected"
+    notes: "动网格计算，需考虑网格变形对稳定性的影响。"
+
+# ============================================================================
+# 网格质量-格式调整规则
+# ============================================================================
+mesh_quality_adjustments:
+  non_orthogonality:
+    low:
+      threshold: 50
+      laplacian: "corrected"
+      snGrad: "corrected"
+      note: "低非正交性，可使用完全修正格式"
+    
+    medium:
+      threshold: 70
+      laplacian: "limited 0.5"
+      snGrad: "limited 0.5"
+      note: "中等非正交性，推荐使用limited格式"
+    
+    high:
+      threshold: 80
+      laplacian: "limited 0.333"
+      snGrad: "limited 0.333"
+      nNonOrthogonalCorrectors: 2
+      note: "高非正交性，需要更强的限制和非正交修正器"
+    
+    extreme:
+      threshold: 90
+      laplacian: "uncorrected"
+      snGrad: "uncorrected"
+      nNonOrthogonalCorrectors: 3
+      note: "极端非正交性，建议改进网格或使用不修正格式"
+
+  aspect_ratio:
+    low:
+      threshold: 10
+      note: "长宽比正常，无需特殊调整"
+    
+    medium:
+      threshold: 50
+      gradientScheme: "Gauss cellLimited 1"
+      note: "中等长宽比，建议使用限制梯度格式"
+    
+    high:
+      threshold: 100
+      gradientScheme: "Gauss cellLimited 0.5"
+      note: "高长宽比，强烈建议使用限制梯度格式"
+
+# ============================================================================
+# 发散诊断规则
+# ============================================================================
+divergence_patterns:
+  residual_explosion:
+    symptoms:
+      - "残差值突然增大几个数量级"
+      - "求解器输出显示NaN或Inf"
+      - "场文件中出现异常大/小值"
+    causes:
+      - pattern: "对流格式过于激进（如linear）"
+        solution: "降级为linearUpwind或limitedLinear"
+      - pattern: "时间步长过大"
+        solution: "减小deltaT，控制Courant数"
+      - pattern: "边界条件不合理"
+        solution: "检查边界值是否物理合理"
+      - pattern: "初始条件不匹配"
+        solution: "使用更保守的初始场或逐步加载边界条件"
+  
+  residual_oscillation:
+    symptoms:
+      - "残差呈现周期性振荡"
+      - "残差上升下降交替"
+      - "无法稳定收敛"
+    causes:
+      - pattern: "中心差分格式导致的振荡"
+        solution: "改用迎风格式或限制器格式"
+      - pattern: "松弛因子过大"
+        solution: "降低松弛因子至0.3-0.5"
+      - pattern: "网格质量问题"
+        solution: "检查网格质量，特别是非正交性"
+      - pattern: "物理不稳定性（如分离流）"
+        solution: "考虑使用瞬态计算捕获非定常行为"
+  
+  residual_stagnation:
+    symptoms:
+      - "残差长时间不下降"
+      - "残差卡在某一水平"
+      - "收敛速度极慢"
+    causes:
+      - pattern: "松弛因子过小"
+        solution: "适当增大松弛因子"
+      - pattern: "网格质量问题"
+        solution: "增加非正交修正器迭代次数"
+      - pattern: "求解器参数不优"
+        solution: "调整求解器容差和迭代次数"
+      - pattern: "边界条件冲突"
+        solution: "检查边界条件是否物理一致"
+
+# ============================================================================
+# 格式降级路径
+# ============================================================================
+scheme_downgrade_paths:
+  convection:
+    # 高精度 -> 稳定的降级路径
+    path: ["cubic", "QUICK", "LUST", "linear", "limitedLinear", "linearUpwind", "upwind"]
+    description: "对流格式降级路径：从高精度到高稳定性"
+  
+  gradient:
+    path: ["leastSquares", "Gauss_linear", "Gauss_cellLimited", "Gauss_pointLimited"]
+    description: "梯度格式降级路径：增加限制以提高稳定性"
+  
+  laplacian:
+    path: ["corrected", "limited 0.5", "limited 0.333", "uncorrected"]
+    description: "拉普拉斯格式降级路径：减少非正交修正"
+
+# ============================================================================
+# 特殊场景格式推荐
+# ============================================================================
+special_scenarios:
+  les_simulation:
+    description: "LES大涡模拟"
+    recommendations:
+      divSchemes:
+        div(phi,U): "Gauss LUST grad(U)"
+        div(phi,k): "Gauss linear"
+      gradSchemes:
+        default: "Gauss linear"
+      note: "LES需要低数值耗散，推荐LUST格式"
+  
+  dns_simulation:
+    description: "DNS直接数值模拟"
+    recommendations:
+      divSchemes:
+        div(phi,U): "Gauss cubic"
+      gradSchemes:
+        default: "Gauss linear"
+      timeSchemes:
+        default: "CrankNicolson 0.9"
+      note: "DNS需要最高精度，但要求网格非常精细"
+  
+  high_speed_compressible:
+    description: "高速可压缩流（Mach > 0.3）"
+    recommendations:
+      divSchemes:
+        div(phi,U): "Gauss linearUpwind grad(U)"
+        div(phi,h): "Gauss linearUpwind grad(h)"
+      note: "高速流动推荐迎风格式以稳定激波捕捉"
+  
+  multiphase_vof:
+    description: "VOF多相流"
+    recommendations:
+      divSchemes:
+        div(phi,alpha): "Gauss vanLeer"
+      note: "VOF方程必须使用限制器格式保持界面锐利"
+  
+  heat_transfer:
+    description: "传热问题"
+    recommendations:
+      divSchemes:
+        div(phi,T): "Gauss linearUpwind grad(T)"
+      laplacianSchemes:
+        default: "Gauss linear limited corrected 0.5"
+      note: "传热问题需要处理温度梯度，注意拉普拉斯格式的选择"

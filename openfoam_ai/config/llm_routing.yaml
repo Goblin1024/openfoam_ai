@@ -1,0 +1,47 @@
+# OpenFOAM AI - 多模型智能路由配置
+# 根据任务特征自动选择最优 LLM 提供商
+
+routing_enabled: true
+routing_mode: balanced  # balanced / low_cost / high_quality
+
+# 任务类型配置
+# priority: 按优先级排列的提供商列表，第一个可用的将被选中
+task_profiles:
+  config_generation:
+    description: "自然语言转 JSON 配置、OpenFOAM 字典生成"
+    priority: [deepseek, kimi, aliyun]
+    temperature: 0.3
+    response_format: json
+
+  reasoning_review:
+    description: "逻辑推理、优化建议、物理路由决策、审查"
+    priority: [deepseek, kimi, aliyun]
+    temperature: 0.5
+
+  explanation:
+    description: "教学解释、CFD 概念解答、常规对话"
+    priority: [kimi, deepseek, aliyun]
+    temperature: 0.7
+
+  intent_recognition:
+    description: "意图分类、快速短回复"
+    priority: [aliyun, deepseek, kimi]
+    temperature: 0.2
+
+  log_analysis:
+    description: "日志提取、残差解析、错误诊断"
+    priority: [deepseek, aliyun, kimi]
+    temperature: 0.3
+
+# 各提供商相对成本系数 (OpenAI = 1.0)
+provider_costs:
+  deepseek: 0.1
+  kimi: 0.5
+  aliyun: 0.15
+  doubao: 0.15
+  glm: 0.4
+  openai: 1.0
+  minimax: 0.1
+
+# 当首选提供商不可用时，是否自动降级到下一个
+fallback_enabled: true

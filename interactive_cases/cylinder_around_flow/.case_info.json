@@ -1,0 +1,45 @@
+{
+  "task_id": "cylinder_flow",
+  "physics_type": "incompressible",
+  "solver": {
+    "name": "pimpleFoam",
+    "endTime": 10.0,
+    "deltaT": 0.001
+  },
+  "geometry": {
+    "dimensions": {
+      "L": 2.0,
+      "W": 1.0,
+      "H": 0.1
+    },
+    "mesh_resolution": {
+      "nx": 100,
+      "ny": 50,
+      "nz": 1
+    }
+  },
+  "boundary_conditions": {
+    "inlet": {
+      "type": "velocityInlet",
+      "value": [
+        1.0,
+        0,
+        0
+      ]
+    },
+    "outlet": {
+      "type": "pressureOutlet",
+      "value": 0
+    },
+    "cylinder": {
+      "type": "noSlip"
+    },
+    "top": {
+      "type": "slip"
+    },
+    "bottom": {
+      "type": "slip"
+    }
+  },
+  "nu": 0.01
+}

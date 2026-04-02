@@ -1,0 +1,163 @@
+{
+  "session_id": "demo_session_001",
+  "saved_at": "2026-03-28 19:04:55",
+  "context": {
+    "session_id": "demo_session_001",
+    "current_case": "cavity_flow",
+    "current_config": {
+      "mesh": "40x40",
+      "solver": "icoFoam"
+    },
+    "conversation_stage": "initial",
+    "last_intent": null,
+    "pending_operations": [
+      {
+        "operation_id": "op_1fc5534d",
+        "operation_type": "delete_case",
+        "description": "删除当前算例及其所有数据",
+        "details": {
+          "case_name": "cavity_flow",
+          "reason": "用户请求"
+        },
+        "risk_level": "critical",
+        "timestamp": "2026-03-28 18:57:32",
+        "status": "pending"
+      },
+      {
+        "operation_id": "op_46fd92c4",
+        "operation_type": "delete_case",
+        "description": "删除当前算例及其所有数据",
+        "details": {
+          "case_name": "cavity_flow",
+          "reason": "用户请求"
+        },
+        "risk_level": "critical",
+        "timestamp": "2026-03-28 18:59:17",
+        "status": "confirmed"
+      },
+      {
+        "operation_id": "op_57c19904",
+        "operation_type": "delete_case",
+        "description": "删除当前算例及其所有数据",
+        "details": {
+          "case_name": "cavity_flow",
+          "reason": "用户请求"
+        },
+        "risk_level": "critical",
+        "timestamp": "2026-03-28 19:04:55",
+        "status": "confirmed"
+      }
+    ],
+    "metadata": {}
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": "建立一个二维方腔驱动流",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "好的，我将为您创建一个方腔驱动流算例。",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "网格用40x40",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "已更新网格配置为40x40。",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "运行计算",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "正在启动求解器...",
+      "timestamp": "2026-03-28 18:57:32",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "建立一个二维方腔驱动流",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "好的，我将为您创建一个方腔驱动流算例。",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "网格用40x40",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "已更新网格配置为40x40。",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "运行计算",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "正在启动求解器...",
+      "timestamp": "2026-03-28 18:59:17",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "建立一个二维方腔驱动流",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "好的，我将为您创建一个方腔驱动流算例。",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "网格用40x40",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "已更新网格配置为40x40。",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    },
+    {
+      "role": "user",
+      "content": "运行计算",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "正在启动求解器...",
+      "timestamp": "2026-03-28 19:04:55",
+      "metadata": {}
+    }
+  ]
+}

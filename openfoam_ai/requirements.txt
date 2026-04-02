@@ -1,0 +1,39 @@
+# OpenFOAM AI Agent 依赖配置
+# Python 3.10+
+
+# LLM框架
+langchain>=0.1.0
+langchain-openai>=0.0.5
+openai>=1.0.0
+
+# 向量数据库
+chromadb>=0.4.0
+faiss-cpu>=1.7.4
+
+# 科学计算
+numpy>=1.24.0
+scipy>=1.10.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+
+# 数据验证
+pydantic>=2.0.0
+
+# OpenFOAM接口
+PyFoam>=2023.1
+
+# 后处理
+pyvista>=0.43.0
+vtk>=9.3.0
+
+# Web UI
+gradio>=4.0.0
+streamlit>=1.28.0
+
+# 其他工具
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+pytest>=7.4.0
+black>=23.0.0
+mypy>=1.5.0

@@ -1,0 +1,52 @@
+{
+  "task_id": "cylinder_2d_karman_vortex_street",
+  "physics_type": "incompressible",
+  "solver": {
+    "name": "icoFoam",
+    "endTime": 10,
+    "deltaT": 0.01
+  },
+  "geometry": {
+    "dimensions": {
+      "L": 20,
+      "W": 10,
+      "H": 0.1
+    },
+    "mesh_resolution": {
+      "nx": 150,
+      "ny": 75,
+      "nz": 1
+    }
+  },
+  "boundary_conditions": {
+    "inlet": {
+      "type": "velocityInlet",
+      "value": {
+        "U": 1,
+        "V": 0,
+        "W": 0
+      }
+    },
+    "outlet": {
+      "type": "pressureOutlet",
+      "value": 0
+    },
+    "cylinder": {
+      "type": "noSlip",
+      "value": {
+        "U": 0,
+        "V": 0,
+        "W": 0
+      }
+    },
+    "walls": {
+      "type": "noSlip",
+      "value": {
+        "U": 0,
+        "V": 0,
+        "W": 0
+      }
+    }
+  },
+  "nu": 1e-06
+}
