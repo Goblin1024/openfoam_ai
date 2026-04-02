@@ -14,7 +14,7 @@
 
 <br>
 
-**English | [中文](README_EN.md)**
+**[English](README_EN.md) | 中文**
 
 <br>
 
