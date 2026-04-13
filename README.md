@@ -413,8 +413,8 @@ pytest openfoam_ai/tests/
 
 如有问题或建议，请通过以下方式联系：
 
-- 提交 [GitHub Issue](https://github.com/yourusername/openfoam-ai/issues)
-- 发送邮件至：your.email@example.com
+- 提交 [GitHub Issue](https://github.com/goblin1024/openfoam-ai/issues)
+- 发送邮件至：abc2375556276@outlook.com
 
 ## 📝 引用
 
@@ -422,10 +422,10 @@ pytest openfoam_ai/tests/
 
 ```bibtex
 @software{openfoam_ai_agent2026,
-  author = {Your Name},
+  author = {吴昊男},
   title = {OpenFOAM AI Agent: LLM-Driven Automated CFD Simulation},
   year = {2026},
-  url = {https://github.com/yourusername/openfoam-ai}
+  url = {https://github.com/goblin1024/openfoam-ai}
 }
 ```
 
